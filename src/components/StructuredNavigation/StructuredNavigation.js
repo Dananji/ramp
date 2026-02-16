@@ -267,11 +267,7 @@ const StructuredNavigation = ({ showAllSectionsButton = false, sectionsHeading =
   };
 
   const numberOfSections = useMemo(() => {
-    if (structureItemsRef.current == null) return 0;
-    if (structureItemsRef.current.length > 0 && hasRootRangeRef.current) {
-      return structureItemsRef.current[0].items.length;
-    }
-    return structureItemsRef.current.length;
+    return structureItemsRef.current?.length || 0;
   }, [structureItemsRef.current]);
 
   if (!manifest) {
