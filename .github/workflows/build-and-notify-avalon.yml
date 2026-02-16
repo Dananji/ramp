@@ -50,12 +50,13 @@ jobs:
 
           git add -A
           if git diff --cached --quiet -- dist/; then
+            echo "No dist changes, skipping commit and push"
             echo "dist_changed=false" >> "$GITHUB_OUTPUT"
           else
             git commit -m "Auto-build from main ($MAIN_SHA)"
+            git push origin ramp-build --force
             echo "dist_changed=true" >> "$GITHUB_OUTPUT"
           fi
-          git push origin ramp-build --force
 
   notify-avalon:
     needs: build-and-deploy
