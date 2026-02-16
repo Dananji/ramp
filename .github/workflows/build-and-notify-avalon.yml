@@ -1,0 +1,54 @@
+name: Build and Notify Avalon
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Build library
+        run: NODE_ENV=production npx vite build
+      - name: Verify dist output
+        run: |
+          test -f dist/ramp.cjs.js
+          test -f dist/ramp.esm.js
+          test -f dist/ramp.umd.js
+          test -f dist/ramp.css
+      - name: Deploy to ramp-build branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin ramp-build || true
+          git checkout ramp-build 2>/dev/null || git checkout --orphan ramp-build
+          git rm -rf . || true
+          git checkout main -- .
+          git add -A
+          git diff --cached --quiet || git commit -m "Auto-build from main ($(git rev-parse --short main))"
+          git push origin ramp-build --force
+
+  notify-avalon:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Avalon of new Ramp build
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.AVALON_REPO_PAT }}
+          repository: avalonmediasystem/avalon
+          event-type: ramp-build-updated
+          client-payload: '{"ramp_commit": "${{ github.sha }}"}'
+
