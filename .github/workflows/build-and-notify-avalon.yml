@@ -30,14 +30,22 @@ jobs:
           test -f dist/ramp.css
       - name: Deploy to ramp-build branch
         run: |
+          # Save built dist files before switching branches
+          cp -r dist /tmp/dist-output
+          MAIN_SHA=$(git rev-parse --short HEAD)
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin ramp-build || true
           git checkout ramp-build 2>/dev/null || git checkout --orphan ramp-build
           git rm -rf . || true
           git checkout main -- .
+
+          # Overlay the built dist files
+          cp -r /tmp/dist-output dist
+
           git add -A
-          git diff --cached --quiet || git commit -m "Auto-build from main ($(git rev-parse --short main))"
+          git diff --cached --quiet || git commit -m "Auto-build from main ($MAIN_SHA)"
           git push origin ramp-build --force
 
   notify-avalon:
