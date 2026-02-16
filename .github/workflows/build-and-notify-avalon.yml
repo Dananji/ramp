@@ -42,6 +42,7 @@ jobs:
           git checkout main -- .
 
           # Overlay the built dist files
+          rm -rf dist
           cp -r /tmp/dist-output dist
 
           git add -A
