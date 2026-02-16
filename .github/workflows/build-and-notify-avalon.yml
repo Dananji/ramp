@@ -8,6 +8,8 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    outputs:
+      dist_changed: ${{ steps.push-build.outputs.dist_changed }}
     permissions:
       contents: write
     steps:
@@ -29,8 +31,9 @@ jobs:
           test -f dist/ramp.umd.js
           test -f dist/ramp.css
       - name: Deploy to ramp-build branch
+        id: push-build
         run: |
-          # Save built dist files before switching branches
+          # Temporarily save built dist files before switching branches
           cp -r dist /tmp/dist-output
           MAIN_SHA=$(git rev-parse --short HEAD)
 
@@ -41,23 +44,29 @@ jobs:
           git rm -rf . || true
           git checkout main -- .
 
-          # Overlay the built dist files
+          # Copy built files to dist/ directory
           rm -rf dist
           cp -r /tmp/dist-output dist
 
           git add -A
-          git diff --cached --quiet || git commit -m "Auto-build from main ($MAIN_SHA)"
+          if git diff --cached --quiet; then
+            echo "dist_changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "Auto-build from main ($MAIN_SHA)"
+            echo "dist_changed=true" >> "$GITHUB_OUTPUT"
+          fi
           git push origin ramp-build --force
 
   notify-avalon:
     needs: build-and-deploy
+    if: needs.build-and-deploy.outputs.dist_changed == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Notify Avalon of new Ramp build
-        uses: peter-evans/repository-dispatch@v3
+      - name: Notify for new Ramp build
+        uses: peter-evans/repository-dispatch@v4
         with:
           token: ${{ secrets.AVALON_REPO_PAT }}
-          repository: avalonmediasystem/avalon
+          repository: dananji/test-ramp
           event-type: ramp-build-updated
           client-payload: '{"ramp_commit": "${{ github.sha }}"}'
 
