@@ -56,8 +56,10 @@ const StructuredNavigation = ({ showAllSectionsButton = false, sectionsHeading =
   const structureContentRef = useRef(null);
 
   useEffect(() => {
-    // Update currentTime and canvasIndex in state if a
-    // custom start time and(or) canvas is given in manifest
+    /**
+     * Update currentTime and canvasIndex in state if a
+     * custom start time and(or) canvas is given in manifest
+     */
     if (manifest) {
       try {
         let { structures, timespans, markRoot, hasCollapsibleStructure }
@@ -267,7 +269,11 @@ const StructuredNavigation = ({ showAllSectionsButton = false, sectionsHeading =
   };
 
   const numberOfSections = useMemo(() => {
-    return structureItemsRef.current?.length || 0;
+    if (structureItemsRef.current == null) return 0;
+    if (structureItemsRef.current.length > 0 && hasRootRangeRef.current) {
+      return structureItemsRef.current[0].items.length;
+    }
+    return structureItemsRef.current.length;
   }, [structureItemsRef.current]);
 
   if (!manifest) {
