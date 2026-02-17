@@ -22,7 +22,7 @@ const Annotations = ({
   showHeading = true,
   showMoreSettings,
 }) => {
-  // Default showMoreSettings
+  // Default showMoreSettings for the AnnotationList component if not provided by the user
   const defaultShowMoreSettings = { enableShowMore: false, textLineLimit: 6 };
 
   // Fill in missing properties, e.g. if prop only set to { enableShowMore: true }
