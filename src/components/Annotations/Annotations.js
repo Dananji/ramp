@@ -153,9 +153,9 @@ const Annotations = ({
         <table className='ramp--markers-display_table' data-testid='markers-display-table'>
           <thead data-testid='markers-display-table-head'>
             <tr data-testid='markers-display-table-head-row'>
-              <th><label htmlFor='marker-edit-label'>Name</label></th>
-              <th><label htmlFor='marker-edit-time'>Time</label></th>
-              {hasAnnotationService && <th>Actions</th>}
+              <th data-testid='markers-display-table-name-row'><label htmlFor='marker-edit-label'>Name</label></th>
+              <th data-testid='markers-display-table-time-row'><label htmlFor='marker-edit-time'>Time</label></th>
+              {hasAnnotationService && <th data-testid='markers-display-table-actions-row'>Actions</th>}
             </tr>
           </thead>
           <tbody>
