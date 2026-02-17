@@ -45,8 +45,9 @@ jobs:
           npx gh-pages \
             -d /tmp/ramp-publish \
             -b ramp-build \
-            -u "Dananji <dwithana@iu.edu>" \
-            -m "Auto-build from main ($MAIN_SHA)"
+            -u "dwithana <dwithana@iu.edu>" \
+            -m "Auto-build from main ($MAIN_SHA)" \
+            -r "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
 
           git fetch origin ramp-build
           AFTER_SHA=$(git rev-parse origin/ramp-build)
