@@ -9,7 +9,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     outputs:
-      dist_changed: ${{ steps.push-build.outputs.dist_changed }}
+      build_changed: ${{ steps.push-build.outputs.build_changed }}
     permissions:
       contents: write
     steps:
@@ -54,14 +54,14 @@ jobs:
 
           if [ "$BEFORE_SHA" = "$AFTER_SHA" ]; then
             echo "No dist changes, skipping notification"
-            echo "dist_changed=false" >> "$GITHUB_OUTPUT"
+            echo "build_changed=false" >> "$GITHUB_OUTPUT"
           else
-            echo "dist_changed=true" >> "$GITHUB_OUTPUT"
+            echo "build_changed=true" >> "$GITHUB_OUTPUT"
           fi
 
   notify-avalon:
     needs: build-and-deploy
-    if: needs.build-and-deploy.outputs.dist_changed == 'true'
+    if: needs.build-and-deploy.outputs.build_changed == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Notify for new Ramp build
