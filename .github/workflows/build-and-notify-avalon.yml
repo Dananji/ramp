@@ -33,28 +33,28 @@ jobs:
       - name: Deploy to ramp-build branch
         id: push-build
         run: |
-          # Temporarily save built dist files before switching branches
-          cp -r dist /tmp/dist-output
           MAIN_SHA=$(git rev-parse --short HEAD)
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin ramp-build || true
-          git checkout ramp-build 2>/dev/null || git checkout --orphan ramp-build
-          git rm -rf . || true
-          git checkout main -- .
+          BEFORE_SHA=$(git rev-parse origin/ramp-build 2>/dev/null || echo "none")
 
-          # Copy built files to dist/ directory
-          rm -rf dist
-          cp -r /tmp/dist-output dist
+          # Stage only the files needed by downstream consumers
+          mkdir -p /tmp/ramp-publish/dist
+          cp -r dist/* /tmp/ramp-publish/dist/
+          cp package.json /tmp/ramp-publish/
 
-          git add -A
-          if git diff --cached --quiet -- dist/; then
-            echo "No dist changes, skipping commit and push"
+          npx gh-pages \
+            -d /tmp/ramp-publish \
+            -b ramp-build \
+            -u "Dananji <dwithana@iu.edu>" \
+            -m "Auto-build from main ($MAIN_SHA)"
+
+          git fetch origin ramp-build
+          AFTER_SHA=$(git rev-parse origin/ramp-build)
+
+          if [ "$BEFORE_SHA" = "$AFTER_SHA" ]; then
+            echo "No dist changes, skipping notification"
             echo "dist_changed=false" >> "$GITHUB_OUTPUT"
           else
-            git commit -m "Auto-build from main ($MAIN_SHA)"
-            git push origin ramp-build --force
             echo "dist_changed=true" >> "$GITHUB_OUTPUT"
           fi
 
