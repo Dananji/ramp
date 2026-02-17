@@ -66598,7 +66598,7 @@ const wP = ({
       ] });
   }, [f]);
   return /* @__PURE__ */ Q.jsxs("div", { className: "ramp--annotations-display", "data-testid": "annotations-display", role: "complementary", "aria-label": "annotations display", children: [
-    t && /* @__PURE__ */ Q.jsx("div", { className: "ramp--annotations__title", "data-testid": "annotations-display-title", children: /* @__PURE__ */ Q.jsx("h4", { children: e }) }),
+    t && /* @__PURE__ */ Q.jsx("div", { className: "ramp--annotations__title", "data-testid": "annotations-display-title", children: /* @__PURE__ */ Q.jsx("h4", { "data-testid": "ramp-annotations-title-text", children: e }) }),
     d && /* @__PURE__ */ Q.jsxs(Q.Fragment, { children: [
       R,
       F
