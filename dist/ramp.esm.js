@@ -64873,7 +64873,7 @@ const rP = ({
       }
       W > -1 && W < z.length && (z[F.current] && (z[F.current].tabIndex = -1), z[W].tabIndex = 0, z[W].focus(), C(W));
     }
-  }, V = at(() => y.current?.length || 0, [y.current]);
+  }, V = at(() => y.current == null ? 0 : y.current.length > 0 && x.current ? y.current[0].items.length : y.current.length, [y.current]);
   return d ? /* @__PURE__ */ Q.jsxs("div", { className: bn("ramp--structured-nav", n && !m.isPlaylist ? " display" : ""), role: "complementary", "aria-label": "structured navigation", children: [
     n && !m.isPlaylist && /* @__PURE__ */ Q.jsxs("div", { className: "ramp--structured-nav__sections", children: [
       /* @__PURE__ */ Q.jsx("span", { "data-testid": "sections-heading-text", className: bn(
