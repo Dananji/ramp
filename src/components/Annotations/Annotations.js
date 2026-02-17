@@ -185,7 +185,7 @@ const Annotations = ({
           className='ramp--annotations__title'
           data-testid='annotations-display-title'
         >
-          <h4>{headingText}</h4>
+          <h4 data-testid='ramp-annotations-title-text'>{headingText}</h4>
         </div>
       )}
       {isPlaylist && (
