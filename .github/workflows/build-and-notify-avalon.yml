@@ -61,7 +61,7 @@ jobs:
 
   notify-avalon:
     needs: build-and-deploy
-    # if: needs.build-and-deploy.outputs.dist_changed == 'true'
+    if: needs.build-and-deploy.outputs.dist_changed == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Notify for new Ramp build
