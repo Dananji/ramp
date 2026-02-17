@@ -139,7 +139,7 @@ The built library can be imported directly from GitHub to test unreleased code c
 3. Push these files into your branch in GitHub
 4. In your application;
    - Remove the existing `@samvera/ramp` installation with `yarn remove @samvera/ramp`
-   - Clean cache using `yarn cache clean` command
+   - Clean cache using `yarn cache clean`
    - Add the built library from your GitHub branch `yarn add https://github.com/samvera-labs/ramp#<your_branch_name>`
 
 Once you've completed your testing, _please cleanup the test branch from GitHub_.
