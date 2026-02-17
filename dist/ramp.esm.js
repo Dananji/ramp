@@ -66589,7 +66589,7 @@ const wP = ({
   }, [h, v.current, x]), F = at(() => {
     if (y.current.length > 0)
       return /* @__PURE__ */ Q.jsxs("table", { className: "ramp--markers-display_table", "data-testid": "markers-display-table", children: [
-        /* @__PURE__ */ Q.jsx("thead", { children: /* @__PURE__ */ Q.jsxs("tr", { children: [
+        /* @__PURE__ */ Q.jsx("thead", { "data-testid": "markers-display-table-head", children: /* @__PURE__ */ Q.jsxs("tr", { "data-testid": "markers-display-table-head-row", children: [
           /* @__PURE__ */ Q.jsx("th", { children: /* @__PURE__ */ Q.jsx("label", { htmlFor: "marker-edit-label", children: "Name" }) }),
           /* @__PURE__ */ Q.jsx("th", { children: /* @__PURE__ */ Q.jsx("label", { htmlFor: "marker-edit-time", children: "Time" }) }),
           h && /* @__PURE__ */ Q.jsx("th", { children: "Actions" })
