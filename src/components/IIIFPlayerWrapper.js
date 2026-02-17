@@ -31,11 +31,7 @@ export default function IIIFPlayerWrapper({
 
   const fetchManifest = async (url) => {
     controller = new AbortController();
-    let requestOptions = {
-      // NOTE: try this in Avalon
-      //credentials: 'include',
-      // headers: { 'Avalon-Api-Key': '' },
-    };
+    let requestOptions = {};
     /**
      * Sanitize manifest urls of query or anchor fragments included in the
      * middle of the url: hhtp://example.com/endpoint?params/manifest
