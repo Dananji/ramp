@@ -29542,11 +29542,7 @@ function Yw({
   let h;
   const d = async (m) => {
     h = new AbortController();
-    let f = {
-      // NOTE: try this in Avalon
-      //credentials: 'include',
-      // headers: { 'Avalon-Api-Key': '' },
-    };
+    let f = {};
     const b = m.replace(/[\?#].*(?=\/)/i, "");
     try {
       await fetch(b, f, {
