@@ -66594,7 +66594,7 @@ const wP = ({
           /* @__PURE__ */ Q.jsx("th", { "data-testid": "markers-display-table-time-heading", children: /* @__PURE__ */ Q.jsx("label", { htmlFor: "marker-edit-time", children: "Time" }) }),
           h && /* @__PURE__ */ Q.jsx("th", { "data-testid": "markers-display-table-actions-row", children: "Actions" })
         ] }) }),
-        /* @__PURE__ */ Q.jsx("tbody", { children: y.current.map((C, L) => /* @__PURE__ */ Q.jsx(JS, { marker: C, handleSubmit: w, handleDelete: D, toggleIsEditing: E, csrfToken: x }, L)) })
+        /* @__PURE__ */ Q.jsx("tbody", { "data-testid": "markers-display-table-body", children: y.current.map((C, L) => /* @__PURE__ */ Q.jsx(JS, { marker: C, handleSubmit: w, handleDelete: D, toggleIsEditing: E, csrfToken: x }, L)) })
       ] });
   }, [f]);
   return /* @__PURE__ */ Q.jsxs("div", { className: "ramp--annotations-display", "data-testid": "annotations-display", role: "complementary", "aria-label": "annotations display", children: [
