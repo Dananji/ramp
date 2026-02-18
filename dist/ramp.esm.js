@@ -66590,8 +66590,8 @@ const wP = ({
     if (y.current.length > 0)
       return /* @__PURE__ */ Q.jsxs("table", { className: "ramp--markers-display_table", "data-testid": "markers-display-table", children: [
         /* @__PURE__ */ Q.jsx("thead", { children: /* @__PURE__ */ Q.jsxs("tr", { children: [
-          /* @__PURE__ */ Q.jsx("th", { children: /* @__PURE__ */ Q.jsx("label", { htmlFor: "marker-edit-label", children: "Name" }) }),
-          /* @__PURE__ */ Q.jsx("th", { children: /* @__PURE__ */ Q.jsx("label", { htmlFor: "marker-edit-time", children: "Time" }) }),
+          /* @__PURE__ */ Q.jsx("th", { "data-testid": "markers-display-table-name-heading", children: /* @__PURE__ */ Q.jsx("label", { htmlFor: "marker-edit-label", children: "Name" }) }),
+          /* @__PURE__ */ Q.jsx("th", { "data-testid": "markers-display-table-time-heading", children: /* @__PURE__ */ Q.jsx("label", { htmlFor: "marker-edit-time", children: "Time" }) }),
           h && /* @__PURE__ */ Q.jsx("th", { "data-testid": "markers-display-table-actions-row", children: "Actions" })
         ] }) }),
         /* @__PURE__ */ Q.jsx("tbody", { children: y.current.map((C, L) => /* @__PURE__ */ Q.jsx(JS, { marker: C, handleSubmit: w, handleDelete: D, toggleIsEditing: E, csrfToken: x }, L)) })
