@@ -158,7 +158,7 @@ const Annotations = ({
               {hasAnnotationService && <th data-testid='markers-display-table-actions-row'>Actions</th>}
             </tr>
           </thead>
-          <tbody>
+          <tbody data-testid='markers-display-table-body'>
             {canvasPlaylistsMarkersRef.current.map((marker, index) => (
               <MarkerRow
                 key={index}
