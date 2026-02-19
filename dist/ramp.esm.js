@@ -29595,21 +29595,24 @@ Yw.propTypes = {
   children: Ee.node
 };
 function m5(n) {
-  const e = Ut.c(7), {
+  const e = Ut.c(8), {
     error: t,
     resetErrorBoundary: i
   } = n;
   let r;
   e[0] !== t.message ? (r = /* @__PURE__ */ Q.jsx("span", { className: "ramp--error-message__message", dangerouslySetInnerHTML: {
     __html: t.message
-  } }), e[0] = t.message, e[1] = r) : r = e[1];
+  }, "data-testid": "error-message-text" }), e[0] = t.message, e[1] = r) : r = e[1];
   let a;
-  e[2] !== i ? (a = /* @__PURE__ */ Q.jsx("button", { className: "ramp--error-message__reset-button", "data-testid": "error-message-reset-button", onClick: i, children: "Please, try again." }), e[2] = i, e[3] = a) : a = e[3];
+  e[2] === Symbol.for("react.memo_cache_sentinel") ? (a = /* @__PURE__ */ Q.jsx("span", { className: "ramp--error-message__suggestion", "data-testid": "error-message-suggestion" }), e[2] = a) : a = e[2];
   let s;
-  return e[4] !== r || e[5] !== a ? (s = /* @__PURE__ */ Q.jsxs("div", { role: "alert", className: "ramp--error-message__alert", children: [
+  e[3] !== i ? (s = /* @__PURE__ */ Q.jsx("button", { className: "ramp--error-message__reset-button", "data-testid": "error-message-reset-button", onClick: i, children: "Please, try again." }), e[3] = i, e[4] = s) : s = e[4];
+  let o;
+  return e[5] !== r || e[6] !== s ? (o = /* @__PURE__ */ Q.jsxs("div", { role: "alert", className: "ramp--error-message__alert", "data-testid": "error-message", children: [
     r,
-    a
-  ] }), e[4] = r, e[5] = a, e[6] = s) : s = e[6], s;
+    a,
+    s
+  ] }), e[5] = r, e[6] = s, e[7] = o) : o = e[7], o;
 }
 const Qw = (n) => {
   const e = Ut.c(2), {
