@@ -290,6 +290,8 @@ const TreeNode = ({
                       className='ramp--structured-nav__item-link'
                       href={homepage && homepage != '' ? homepage : id}
                       aria-label={ariaLabel}
+                      data-testid='treeitem-link'
+                      data-mediafrag={id}
                       onClick={handleClick}
                       onKeyDown={handleLinkKeyDown}
                       tabIndex={-1}>
