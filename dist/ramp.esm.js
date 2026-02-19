@@ -29604,7 +29604,7 @@ function m5(n) {
     __html: t.message
   } }), e[0] = t.message, e[1] = r) : r = e[1];
   let a;
-  e[2] !== i ? (a = /* @__PURE__ */ Q.jsx("button", { className: "ramp--error-message__reset-button", onClick: i, children: "Try again" }), e[2] = i, e[3] = a) : a = e[3];
+  e[2] !== i ? (a = /* @__PURE__ */ Q.jsx("button", { className: "ramp--error-message__reset-button", "data-testid": "error-message-reset-button", onClick: i, children: "Please, try again." }), e[2] = i, e[3] = a) : a = e[3];
   let s;
   return e[4] !== r || e[5] !== a ? (s = /* @__PURE__ */ Q.jsxs("div", { role: "alert", className: "ramp--error-message__alert", children: [
     r,
