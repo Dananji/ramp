@@ -65986,7 +65986,7 @@ const ZS = ({
     o(D);
   };
   return /* @__PURE__ */ Q.jsxs("div", { className: "ramp-markers-display__new-marker", "data-testid": "create-new-marker", children: [
-    /* @__PURE__ */ Q.jsx("button", { type: "submit", onClick: g, className: "ramp--markers-display__edit-button", "data-testid": "create-new-marker-button", disabled: !(b && b.isReady), children: "Add New Marker" }),
+    /* @__PURE__ */ Q.jsx("button", { type: "submit", onClick: g, className: "ramp--markers-display__edit-button", "data-testid": "create-new-marker-button", disabled: !(b != null && b.isReady), children: "Add New Marker" }),
     r && /* @__PURE__ */ Q.jsx("form", { className: "ramp--markers-display__new-marker-form", method: "post", onSubmit: v, "data-testid": "create-new-marker-form", children: /* @__PURE__ */ Q.jsx("table", { className: "create-marker-form-table", children: /* @__PURE__ */ Q.jsx("tbody", { children: /* @__PURE__ */ Q.jsxs("tr", { children: [
       /* @__PURE__ */ Q.jsxs("td", { children: [
         /* @__PURE__ */ Q.jsx("label", { htmlFor: "new-marker-title", children: "Title:" }),
