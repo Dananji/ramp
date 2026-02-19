@@ -65893,7 +65893,7 @@ const UP = ({
     d
   ] });
 }, TP = (n) => {
-  const e = Ut.c(14), {
+  const e = Ut.c(15), {
     label: t,
     showLabel: i
   } = n, r = t === void 0 ? "Autoplay" : t, a = i === void 0 ? !0 : i, {
@@ -65908,19 +65908,19 @@ const UP = ({
   }, e[0] = s, e[1] = o, e[2] = u) : u = e[2];
   const c = u;
   let l;
-  e[3] !== c ? (l = (b) => {
-    (b.key === "Enter" || b.key === " ") && (b.preventDefault(), c(b));
-  }, e[3] = c, e[4] = l) : l = e[4];
+  e[3] !== s || e[4] !== c ? (l = (b) => {
+    (b.key === "Enter" || b.key === " ") && (b.preventDefault(), b.target.setAttribute("aria-checked", String(!s)), c(b));
+  }, e[3] = s, e[4] = c, e[5] = l) : l = e[5];
   const p = l, h = String(s);
   let d;
-  e[5] !== r || e[6] !== a ? (d = a && /* @__PURE__ */ Q.jsx("span", { className: "ramp--auto-advance-label", "data-testid": "auto-advance-label", children: r }), e[5] = r, e[6] = a, e[7] = d) : d = e[7];
+  e[6] !== r || e[7] !== a ? (d = a && /* @__PURE__ */ Q.jsx("span", { className: "ramp--auto-advance-label", "data-testid": "auto-advance-label", children: r }), e[6] = r, e[7] = a, e[8] = d) : d = e[8];
   let m;
-  e[8] === Symbol.for("react.memo_cache_sentinel") ? (m = /* @__PURE__ */ Q.jsx("span", { className: "slider", children: /* @__PURE__ */ Q.jsx("span", { "data-testid": "auto-advance-toggle" }) }), e[8] = m) : m = e[8];
+  e[9] === Symbol.for("react.memo_cache_sentinel") ? (m = /* @__PURE__ */ Q.jsx("span", { className: "slider", children: /* @__PURE__ */ Q.jsx("span", { "data-testid": "auto-advance-toggle" }) }), e[9] = m) : m = e[9];
   let f;
-  return e[9] !== c || e[10] !== p || e[11] !== h || e[12] !== d ? (f = /* @__PURE__ */ Q.jsxs("div", { role: "switch", onClick: c, onKeyDown: p, "aria-checked": h, tabIndex: 0, "data-testid": "auto-advance", className: "ramp--auto-advance", children: [
+  return e[10] !== c || e[11] !== p || e[12] !== h || e[13] !== d ? (f = /* @__PURE__ */ Q.jsxs("div", { role: "switch", onClick: c, onKeyDown: p, "aria-checked": h, tabIndex: 0, "data-testid": "auto-advance", className: "ramp--auto-advance", children: [
     d,
     m
-  ] }), e[9] = c, e[10] = p, e[11] = h, e[12] = d, e[13] = f) : f = e[13], f;
+  ] }), e[10] = c, e[11] = p, e[12] = h, e[13] = d, e[14] = f) : f = e[14], f;
 };
 TP.propTypes = {
   label: Ee.string,
