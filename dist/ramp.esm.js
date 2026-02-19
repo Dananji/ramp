@@ -65932,29 +65932,30 @@ const ZS = ({
   const [r, a] = Ge(!1), [s, o] = Ge(!1), [u, c] = Ge(!1), [l, p] = Ge(""), [h, d] = Ge();
   let m;
   const {
-    getCurrentTime: f
+    getCurrentTime: f,
+    player: b
   } = go();
   it(() => (a(!1), () => {
     m?.abort();
   }), [e]);
-  const b = () => {
-    const T = Rn(f(), !0, !0);
-    y(T), a(!0);
-  }, g = Yt((T) => {
-    T.preventDefault();
-    const x = T.target, w = new FormData(x), {
-      label: D,
-      time: U
-    } = Object.fromEntries(w.entries()), E = {
+  const g = () => {
+    const x = Rn(f(), !0, !0);
+    T(x), a(!0);
+  }, v = Yt((x) => {
+    x.preventDefault();
+    const w = x.target, D = new FormData(w), {
+      label: U,
+      time: E
+    } = Object.fromEntries(D.entries()), R = {
       type: "Annotation",
       motivation: "highlighting",
       body: {
         type: "TextualBody",
         format: "text/html",
-        value: D
+        value: U
       },
-      target: `${e}#t=${Oi(U)}`
-    }, R = {
+      target: `${e}#t=${Oi(E)}`
+    }, F = {
       method: "POST",
       /** NOTE: In avalon try this option */
       credentials: "same-origin",
@@ -65962,38 +65963,38 @@ const ZS = ({
         Accept: "application/json"
         // 'Avalon-Api-Key': '',
       },
-      body: JSON.stringify(E)
+      body: JSON.stringify(R)
     };
-    i !== void 0 && (R.headers["X-CSRF-Token"] = i), m = new AbortController(), fetch(n, R, {
+    i !== void 0 && (F.headers["X-CSRF-Token"] = i), m = new AbortController(), fetch(n, F, {
       signal: m.signal
-    }).then((F) => {
-      if (F.status != 201)
+    }).then((C) => {
+      if (C.status != 201)
         throw new Error();
-      return F.json();
-    }).then((F) => {
-      const C = n5(F);
-      C && t(C), a(!1);
-    }).catch((F) => {
-      console.error("CreateMarker -> handleCreateMarker() -> failed to create annotation; ", F), c(!0), p("Marker creation failed.");
+      return C.json();
+    }).then((C) => {
+      const L = n5(C);
+      L && t(L), a(!1);
+    }).catch((C) => {
+      console.error("CreateMarker -> handleCreateMarker() -> failed to create annotation; ", C), c(!0), p("Marker creation failed.");
     });
-  }, [e]), v = Yt(() => {
+  }, [e]), y = Yt(() => {
     a(!1), o(!1), p(""), c(!1);
-  }), y = (T) => {
-    let x = T?.target?.value ?? T;
-    d(x);
-    let w = Y_(x);
-    o(w);
+  }), T = (x) => {
+    let w = x?.target?.value ?? x;
+    d(w);
+    let D = Y_(w);
+    o(D);
   };
   return /* @__PURE__ */ Q.jsxs("div", { className: "ramp-markers-display__new-marker", "data-testid": "create-new-marker", children: [
-    /* @__PURE__ */ Q.jsx("button", { type: "submit", onClick: b, className: "ramp--markers-display__edit-button", "data-testid": "create-new-marker-button", children: "Add New Marker" }),
-    r && /* @__PURE__ */ Q.jsx("form", { className: "ramp--markers-display__new-marker-form", method: "post", onSubmit: g, "data-testid": "create-new-marker-form", children: /* @__PURE__ */ Q.jsx("table", { className: "create-marker-form-table", children: /* @__PURE__ */ Q.jsx("tbody", { children: /* @__PURE__ */ Q.jsxs("tr", { children: [
+    b && b.isReady && /* @__PURE__ */ Q.jsx("button", { type: "submit", onClick: g, className: "ramp--markers-display__edit-button", "data-testid": "create-new-marker-button", children: "Add New Marker" }),
+    r && /* @__PURE__ */ Q.jsx("form", { className: "ramp--markers-display__new-marker-form", method: "post", onSubmit: v, "data-testid": "create-new-marker-form", children: /* @__PURE__ */ Q.jsx("table", { className: "create-marker-form-table", children: /* @__PURE__ */ Q.jsx("tbody", { children: /* @__PURE__ */ Q.jsxs("tr", { children: [
       /* @__PURE__ */ Q.jsxs("td", { children: [
         /* @__PURE__ */ Q.jsx("label", { htmlFor: "new-marker-title", children: "Title:" }),
         /* @__PURE__ */ Q.jsx("input", { id: "new-marker-title", "data-testid": "create-marker-title", type: "text", className: "ramp--markers-display__create-marker", name: "label" })
       ] }),
       /* @__PURE__ */ Q.jsxs("td", { children: [
         /* @__PURE__ */ Q.jsx("label", { htmlFor: "new-marker-time", children: "Time:" }),
-        /* @__PURE__ */ Q.jsx("input", { id: "new-marker-time", "data-testid": "create-marker-timestamp", type: "text", className: bn("ramp--markers-display__create-marker", s ? "time-valid" : "time-invalid"), name: "time", value: h, onChange: y })
+        /* @__PURE__ */ Q.jsx("input", { id: "new-marker-time", "data-testid": "create-marker-timestamp", type: "text", className: bn("ramp--markers-display__create-marker", s ? "time-valid" : "time-invalid"), name: "time", value: h, onChange: T })
       ] }),
       /* @__PURE__ */ Q.jsx("td", { children: /* @__PURE__ */ Q.jsxs("div", { className: "marker-actions", children: [
         u && /* @__PURE__ */ Q.jsx("p", { className: "ramp--markers-display__error-message", children: l }),
@@ -66001,7 +66002,7 @@ const ZS = ({
           /* @__PURE__ */ Q.jsx(um, {}),
           " Save"
         ] }),
-        /* @__PURE__ */ Q.jsxs("button", { className: "ramp--markers-display__edit-button-danger", "data-testid": "edit-cancel-button", onClick: v, children: [
+        /* @__PURE__ */ Q.jsxs("button", { className: "ramp--markers-display__edit-button-danger", "data-testid": "edit-cancel-button", onClick: y, children: [
           /* @__PURE__ */ Q.jsx(cm, {}),
           " Cancel"
         ] })
