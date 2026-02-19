@@ -106,16 +106,15 @@ const CreateMarker = ({ newMarkerEndpoint, canvasId, handleCreate, csrfToken }) 
 
   return (
     <div className="ramp-markers-display__new-marker" data-testid="create-new-marker">
-      {player && player.isReady && (
-        <button
-          type="submit"
-          onClick={handleAddMarker}
-          className="ramp--markers-display__edit-button"
-          data-testid="create-new-marker-button"
-        >
-          Add New Marker
-        </button>
-      )}
+      <button
+        type="submit"
+        onClick={handleAddMarker}
+        className="ramp--markers-display__edit-button"
+        data-testid="create-new-marker-button"
+        disabled={!(player && player.isReady)}
+      >
+        Add New Marker
+      </button>
       {isOpen &&
         (<form
           className="ramp--markers-display__new-marker-form"
