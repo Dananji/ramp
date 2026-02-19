@@ -66,11 +66,11 @@ jobs:
     if: needs.build-and-deploy.outputs.build_changed == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Notify new Ramp build
+      - name: Notify for new Ramp build
         uses: peter-evans/repository-dispatch@v4
         with:
-          token: ${{ secrets.AVALON_DISPATCH_TOKEN }}
-          repository: avalonmediasystem/avalon
+          token: ${{ secrets.TEST_RAMP_PAT }}
+          repository: Dananji/test-ramp
           event-type: latest-ramp
           client-payload: '{"ramp_commit": "${{ github.sha }}"}'
 
