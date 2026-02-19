@@ -113,7 +113,7 @@ const CreateMarker = ({ newMarkerEndpoint, canvasId, handleCreate, csrfToken }) 
         data-testid="create-new-marker-button"
         disabled={!(player != null && player.isReady)}
       >
-        Add New Marker
+        Add New Marker (current time)
       </button>
       {isOpen &&
         (<form
