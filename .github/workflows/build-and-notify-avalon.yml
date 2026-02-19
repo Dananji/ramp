@@ -69,6 +69,7 @@ jobs:
           curl -X POST \
             -H "Authorization: Bearer ${{ secrets.TEST_WORKFLOW_PAT }}" \
             -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/Dananji/test-ramp/actions/workflows/update-ramp-build.yml/dispatches \
-            -d '{"ref":"develop","inputs":{"ramp_commit":"${{ github.sha }}"}}'
+            https://api.github.com/repos/Dananji/test-ramp/dispatches \
+            -d '{"event_type":"update-ramp-build","client_payload":{"ramp_commit":"${{ github.sha }}"}}'
+
 
