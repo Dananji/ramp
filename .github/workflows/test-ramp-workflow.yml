@@ -1,4 +1,4 @@
-name: Build and Notify Avalon
+name: Build using workflow dispatch
 
 on:
   push:
@@ -66,11 +66,10 @@ jobs:
     if: needs.build-and-deploy.outputs.build_changed == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Notify for new Ramp build
-        uses: peter-evans/repository-dispatch@v4
-        with:
-          token: ${{ secrets.TEST_RAMP_PAT }}
-          repository: Dananji/test-ramp
-          event-type: latest-ramp
-          client-payload: '{"ramp_commit": "${{ github.sha }}"}'
-
+      - name: Notify new Ramp build
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.TEST_WORKFLOW_PAT }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/Dananji/test-ramp/actions/workflows/ramp-workflow.yml/dispatches \
+            -d '{"ref":"develop","inputs":{"ramp_commit":"${{ github.sha }}"}}'
