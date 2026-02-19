@@ -12,8 +12,9 @@ function Fallback({ error, resetErrorBoundary }) {
       </span>
       <button
         className="ramp--error-message__reset-button"
+        data-testid="error-message-reset-button"
         onClick={resetErrorBoundary}>
-        Try again
+        Please, try again.
       </button>
     </div>
   );
