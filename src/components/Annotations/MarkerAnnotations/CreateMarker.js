@@ -111,7 +111,7 @@ const CreateMarker = ({ newMarkerEndpoint, canvasId, handleCreate, csrfToken }) 
         onClick={handleAddMarker}
         className="ramp--markers-display__edit-button"
         data-testid="create-new-marker-button"
-        disabled={!(player && player.isReady)}
+        disabled={!(player != null && player.isReady)}
       >
         Add New Marker
       </button>
