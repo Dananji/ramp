@@ -23,7 +23,7 @@ const CreateMarker = ({ newMarkerEndpoint, canvasId, handleCreate, csrfToken }) 
   const [markerTime, setMarkerTime] = useState();
   let controller;
 
-  const { getCurrentTime } = useMediaPlayer();
+  const { getCurrentTime, player } = useMediaPlayer();
 
   useEffect(() => {
     // Close new marker form on Canvas change
@@ -106,14 +106,16 @@ const CreateMarker = ({ newMarkerEndpoint, canvasId, handleCreate, csrfToken }) 
 
   return (
     <div className="ramp-markers-display__new-marker" data-testid="create-new-marker">
-      <button
-        type="submit"
-        onClick={handleAddMarker}
-        className="ramp--markers-display__edit-button"
-        data-testid="create-new-marker-button"
-      >
-        Add New Marker
-      </button>
+      {player && player.isReady && (
+        <button
+          type="submit"
+          onClick={handleAddMarker}
+          className="ramp--markers-display__edit-button"
+          data-testid="create-new-marker-button"
+        >
+          Add New Marker
+        </button>
+      )}
       {isOpen &&
         (<form
           className="ramp--markers-display__new-marker-form"
