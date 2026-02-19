@@ -26,6 +26,8 @@ const AutoAdvanceToggle = ({ label = 'Autoplay', showLabel = true }) => {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
+      const target = e.target;
+      target.setAttribute('aria-checked', String(!autoAdvance));
       handleChange(e);
     }
   };
