@@ -5,10 +5,13 @@ import './ErrorMessage.scss';
 
 function Fallback({ error, resetErrorBoundary }) {
   return (
-    <div role="alert" className="ramp--error-message__alert">
+    <div role="alert" className="ramp--error-message__alert" data-testid="error-message">
       <span
         className="ramp--error-message__message"
-        dangerouslySetInnerHTML={{ __html: error.message }}>
+        dangerouslySetInnerHTML={{ __html: error.message }}
+        data-testid="error-message-text"
+      ></span>
+      <span className="ramp--error-message__suggestion" data-testid="error-message-suggestion">
       </span>
       <button
         className="ramp--error-message__reset-button"
