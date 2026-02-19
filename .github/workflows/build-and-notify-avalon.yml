@@ -67,7 +67,7 @@ jobs:
       - name: Notify new Ramp build
         run: |
           curl -X POST \
-            -H "Authorization: Bearer ${{ secrets.TEST_RAMP_PAT }}" \
+            -H "Authorization: Bearer ${{ secrets.TEST_WORKFLOW_PAT }}" \
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/Dananji/test-ramp/actions/workflows/update-ramp-build.yml/dispatches \
             -d '{"ref":"develop","inputs":{"ramp_commit":"${{ github.sha }}"}}'
