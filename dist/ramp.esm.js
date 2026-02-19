@@ -64684,7 +64684,7 @@ const iP = (n) => {
         M && !d && ue()
       ] }) : /* @__PURE__ */ Q.jsx(Q.Fragment, { children: s ? /* @__PURE__ */ Q.jsx("span", { className: "ramp--structured-nav__item-title", children: l }) : /* @__PURE__ */ Q.jsxs(Wu, { children: [
         /* @__PURE__ */ Q.jsx("div", { className: "tracker" }),
-        u ? /* @__PURE__ */ Q.jsxs("a", { role: "button", className: "ramp--structured-nav__item-link", href: h && h != "" ? h : a, "aria-label": Oe, onClick: L, onKeyDown: K, tabIndex: -1, children: [
+        u ? /* @__PURE__ */ Q.jsxs("a", { role: "button", className: "ramp--structured-nav__item-link", href: h && h != "" ? h : a, "aria-label": Oe, "data-testid": "treeitem-link", "data-mediafrag": a, onClick: L, onKeyDown: K, tabIndex: -1, children: [
           c && /* @__PURE__ */ Q.jsx(NL, {}),
           `${f}.`,
           /* @__PURE__ */ Q.jsxs("span", { className: "structured-nav__item-label", "aria-label": l, children: [
