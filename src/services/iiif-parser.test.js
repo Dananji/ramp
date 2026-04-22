@@ -8,12 +8,13 @@ import playlistManifest from '@TestData/playlist';
 import emptyManifest from '@TestData/empty-manifest';
 import singleCanvasManifest from '@TestData/single-canvas';
 import audiannotateTest from '@TestData/audiannotate-test';
+import adManifest from '@TestData/ad-annotation';
 import * as iiifParser from './iiif-parser';
 import * as util from './utility-helpers';
 
 describe('iiif-parser', () => {
   describe('canvasesInManifest()', () => {
-    it('returns a list canvases in the manifest', () => {
+    it('returns a list of canvases in the manifest', () => {
       const canvases = iiifParser.canvasesInManifest(lunchroomManifest);
       expect(canvases).toHaveLength(2);
     });
@@ -269,6 +270,17 @@ describe('iiif-parser', () => {
             canvasIndex: 0,
           });
           expect(tracks).toEqual([]);
+        });
+
+        it('separates audio description tracks into audioDescTracks', () => {
+          const { tracks, audioDescTracks } = iiifParser.getMediaInfo({
+            manifest: adManifest,
+            canvasIndex: 0,
+          });
+          expect(audioDescTracks).toHaveLength(1);
+          expect(audioDescTracks[0].kind).toEqual('descriptions');
+          expect(audioDescTracks[0].src).toContain('/descriptions');
+          expect(tracks).toHaveLength(0);
         });
       });
     });
@@ -563,7 +575,7 @@ describe('iiif-parser', () => {
       const { manifestMetadata, _ } = iiifParser.getMetadata(lunchroomManifest, false);
       expect(manifestMetadata[3]).toEqual({
         label: "Summary",
-        value: "This is the summary field. It may include a summary of the item.<br /><br />Does a  pre  tag exist here?<br /><br /><b>How about some bold?</b><br /><br /><i>Or italics?</i>"
+        value: "This is the summary field. It may include a summary of the item.<br><br>Does a  pre  tag exist here?<br><br><b>How about some bold?</b><br><br><i>Or italics?</i>"
       });
     });
 
@@ -573,9 +585,19 @@ describe('iiif-parser', () => {
         label: "Title",
         value: "This is the title of the item!"
       });
+      // Strips unsafe 'javascript:' from the metadata field
+      expect(manifestMetadata[1]).toEqual({
+        label: "Date",
+        value: "2023 (Creation date: 2023)<br><a>xss</a>"
+      });
       expect(manifestMetadata[2]).toEqual({
         label: "Main contributors",
-        value: "John Doe<br />The Avalon Media System Team"
+        value: "<a href=\"mailto:johndoe@example.com\">John Doe</a><br>The Avalon Media System Team"
+      });
+      // Strips unsafe 'data:' from the metadata field
+      expect(manifestMetadata[4]).toEqual({
+        label: "Contributors",
+        value: "Jon's Cats<br>Adorable Dogs<br><a>Cats &amp; Dogs</a>"
       });
       expect(manifestMetadata[5]).toEqual({
         label: "Collection",
@@ -583,7 +605,7 @@ describe('iiif-parser', () => {
       });
       expect(manifestMetadata[6]).toEqual({
         label: "Related Items",
-        value: "<a href=\"https://iu.edu\">IU</a><br /><a href=\"https://avalonmediasystem.org\">Avalon Website</a>"
+        value: "<a href=\"https://iu.edu\">IU</a><br><a href=\"https://avalonmediasystem.org\">Avalon Website</a>"
       });
       expect(manifestMetadata[7]).toEqual({
         label: "Notes", value: "<a></a>"

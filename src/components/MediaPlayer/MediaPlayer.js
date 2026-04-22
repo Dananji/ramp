@@ -21,6 +21,10 @@ const PLAYER_ID = 'iiif-media-player';
  * @param {Boolean} props.enableTitleLink
  * @param {Boolean} props.withCredentials
  * @param {String} props.language
+ * @param {Object} props.resumeCache
+ * @param {Boolean} props.resumeCache.enable whether to enable caching of playback positions
+ * @param {Number} props.resumeCache.ttlDays number of days before a cached entry expires, default: 30 days
+ * @param {Number} props.resumeCache.maxItems maximum number of entries to be stored in the cache, default: 200 entries
  */
 const MediaPlayer = ({
   enableFileDownload = false,
@@ -28,7 +32,8 @@ const MediaPlayer = ({
   enablePlaybackRate = false,
   enableTitleLink = false,
   withCredentials = false,
-  language = 'en'
+  language = 'en',
+  resumeCache = { enable: false, ttlDays: 30, maxItems: 200 },
 }) => {
   const manifestState = useManifestState();
   const playerState = usePlayerState();
@@ -56,7 +61,7 @@ const MediaPlayer = ({
     switchPlayer
   } = useSetupPlayer({ enableFileDownload, lastCanvasIndex, withCredentials });
 
-  const { error, poster, sources, targets, tracks } = playerConfig;
+  const { error, poster, sources, targets, tracks, audioDescTracks } = playerConfig;
 
   // Load Video.js language map using dynamic imports
   const loadVideoJSLanguageMap = useMemo(() => {
@@ -159,6 +164,7 @@ const MediaPlayer = ({
             'customControlSpacer', // Spacer element from VideoJS
             IS_MOBILE ? 'muteToggle' : 'volumePanel',
             (tracks.length > 0 && isVideo) ? 'subsCapsButton' : '',
+            (audioDescTracks.length > 0 && isVideo) ? 'videoJSADButton' : '',
             (hasStructure || isPlaylist) ? 'videoJSTrackScrubber' : '',
             'qualitySelector',
             enablePlaybackRate ? 'playbackRateMenuButton' : '',
@@ -183,7 +189,8 @@ const MediaPlayer = ({
           videoJSNextButton: isMultiCanvased &&
             { canvasIndex, lastCanvasIndex, switchPlayer },
           videoJSTrackScrubber: (hasStructure || isPlaylist) &&
-            { trackScrubberRef, timeToolRef, isPlaylist }
+            { trackScrubberRef, timeToolRef, isPlaylist },
+          videoJSADButton: (audioDescTracks.length > 0) && { audioDescTracks }
         },
         sources: isMultiSourced
           ? [sources[srcIndex]]
@@ -205,11 +212,13 @@ const MediaPlayer = ({
         aria-label='media player'
       >
         <VideoJSPlayer
+          audioDescTracks={audioDescTracks}
           enableFileDownload={enableFileDownload}
           enableTitleLink={enableTitleLink}
           isVideo={isVideo}
           options={videoJSOptions}
           placeholderText={error}
+          resumeCache={resumeCache}
           scrubberTooltipRef={timeToolRef}
           tracks={tracks}
           trackScrubberRef={trackScrubberRef}
@@ -230,6 +239,11 @@ MediaPlayer.propTypes = {
   enableTitleLink: PropTypes.bool,
   withCredentials: PropTypes.bool,
   language: PropTypes.string,
+  resumeCache: PropTypes.shape({
+    enable: PropTypes.bool,
+    ttlDays: PropTypes.number,
+    maxItems: PropTypes.number,
+  }),
 };
 
 export default MediaPlayer;

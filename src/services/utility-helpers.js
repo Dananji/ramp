@@ -2,8 +2,9 @@ import { decode } from 'html-entities';
 import isEmpty from 'lodash/isEmpty';
 import { getPlaceholderCanvas } from './iiif-parser';
 import mimeTypes from 'mime-types';
+import { IS_ANDROID, IS_MOBILE, IS_SAFARI } from '@Services/browser';
 
-const S_ANNOTATION_TYPE = { transcript: 1, caption: 2, both: 3 };
+const S_ANNOTATION_TYPE = { transcript: 1, caption: 2, both: 3, audioDescription: 4 };
 // Number of decimal places for milliseconds used in time calculations. 
 // This is used to ensure there are no mis-calculations around times that has a long decimal for milliseconds.
 const MILLISECOND_PRECISION = 1000;
@@ -478,6 +479,8 @@ function getResourceInfo(item, start, duration, motivation) {
   // If there are multiple labels, assume the first one
   // is the one intended for default display
   let label = getLabelValue(item.label);
+  // Detect forced captions by detecting '[forced]' text in the label
+  const isForced = typeof label === 'string' && label.toLowerCase().includes('[forced]');
   if (motivation === 'supplementing') {
     aType = identifySupplementingAnnotation(item.id);
   }
@@ -497,14 +500,20 @@ function getResourceInfo(item, start, duration, motivation) {
       };
     }
     if (motivation === 'supplementing') {
-      // Set language for captions/subtitles
+      // Set language for captions/subtitles/descriptions
       source.srclang = item.language ?? 'en';
-      // Specify kind to subtitles for VTT annotations. Without this VideoJS
-      // resolves the kind to metadata for subtitles file, resulting in empty
-      // subtitles lists in iOS devices' native palyers
-      source.kind = item.format.toLowerCase().includes('text/vtt')
-        ? 'subtitles'
-        : 'metadata';
+      if (aType === S_ANNOTATION_TYPE.audioDescription) {
+        // Mark VideoJS 'descriptions' kind for audio description tracks
+        source.kind = 'descriptions';
+      } else {
+        // And the rest as 'subtitles' for VTT annotations and others as 'metadata'
+        // Without this VideoJS resolves the kind='metadata' for subtitles file, 
+        // resulting in empty subtitles lists in iOS devices' native players.
+        source.kind = item.format.toLowerCase().includes('text/vtt')
+          ? 'subtitles'
+          : 'metadata';
+      }
+      if (isForced) source.forced = true;
     }
   }
   return source;
@@ -601,6 +610,8 @@ export function identifySupplementingAnnotation(uri) {
     return S_ANNOTATION_TYPE.transcript;
   } else if (identifier === 'captions') {
     return S_ANNOTATION_TYPE.caption;
+  } else if (identifier === 'descriptions') {
+    return S_ANNOTATION_TYPE.audioDescription;
   } else {
     return S_ANNOTATION_TYPE.both;
   }
@@ -708,7 +719,7 @@ export function playerHotKeys(event, player, canvasIsEmpty = false) {
     'ramp--structured-nav__item-link', 'ramp--structured-nav__collapse-all-btn',
     'ramp--annotations__multi-select-header', 'ramp--annotations__show-more-tags',
     'ramp--annotations__show-more-less', 'ramp--annotations__annotation-row-time-tags',
-    'ramp--transcript__show-more-less'
+    'ramp--transcript__show-more-less', 'placeholder-previous-button', 'placeholder-next-button'
   ];
 
   // Check if the activeElement is an anchor tag inside a annotation/cue text
@@ -1020,4 +1031,86 @@ const findLastTextNode = (node) => {
     }
   }
   return null;
+};
+
+/**
+ * Offset text track cues based on the current source's 'altStart' value for
+ * multi-source media in a single Canvas.
+ * This makes cues match the player's relative time.
+ * @param {Object} player VideoJS player instance
+ * @param {Number} altStart offset of the current source in the Canvas
+ * @param {Number} duration duration of the current source in the Canvas
+ */
+export const offsetTextTrackCues = (player, altStart, duration) => {
+  const textTracks = player.textTracks();
+
+  for (let i = 0; i < textTracks.length; i++) {
+    const track = textTracks[i];
+    if (track.kind !== 'subtitles' && track.kind !== 'captions') continue;
+
+    // Handle iOS and Safari native tracks
+    if ((IS_MOBILE && !IS_ANDROID) || IS_SAFARI) {
+      // Native tracks: cues may be read-only, use track events
+      track.oncuechange = null;
+      track.oncuechange = () => {
+        // Filter and display only cues in range
+        filterAndOffsetTextTrackCues(track, altStart, duration);
+      };
+    } else {
+      const cues = track.cues;
+      if (!cues) continue;
+
+      for (let j = 0; j < cues.length; j++) {
+        const cue = cues[j];
+        // Store original times on first access
+        if (cue._originalStartTime === undefined) {
+          cue._originalStartTime = cue.startTime;
+          cue._originalEndTime = cue.endTime;
+        }
+        /**
+         * Apply offset to convert cue's time the player's relative time.
+         * When altStart > cue's original start/end times the offset cue times
+         * become negative. And these cues belong to previous source(s) and
+         * VideoJS naturally ignores them.
+         */
+        cue.startTime = cue._originalStartTime - altStart;
+        cue.endTime = cue._originalEndTime - altStart;
+      }
+    }
+  }
+};
+
+/**
+ * Filter and offset only the active cues in a given TextTrack in iOS/Safari native tracks.
+ * @param {Object} track TextTrack object from VideoJS
+ * @param {Number} altStart offset of the current source in the Canvas
+ * @param {Number} duration duration of the current source in the Canvas
+ * @returns 
+ */
+const filterAndOffsetTextTrackCues = (track, altStart, duration) => {
+  const cues = track.cues;
+  if (!cues || altStart === 0) return;
+
+  for (let i = 0; i < cues.length; i++) {
+    const cue = cues[i];
+
+    // Store original times on first access
+    if (cue._originalStartTime === undefined) {
+      cue._originalStartTime = cue.startTime;
+      cue._originalEndTime = cue.endTime;
+    }
+    const altEnd = altStart === 0 ? altStart : altStart + duration;
+
+    // Hide cues that are out of range by setting text='' and offset times for cues in range
+    if (cue._originalEndTime < altStart || cue._originalStartTime > altEnd) {
+      // Store original text to restore later and clear text to hide the cue
+      if (cue._originalText === undefined) cue._originalText = cue.text;
+      cue.text = '';
+    } else {
+      cue.startTime = cue._originalStartTime - altStart;
+      cue.endTime = cue._originalEndTime - altStart;
+      // Restore original text if it was previously hidden
+      if (cue._originalText !== undefined) cue.text = cue._originalText;
+    }
+  }
 };

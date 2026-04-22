@@ -1,6 +1,6 @@
 import { parseManifest, PropertyValue } from 'manifesto.js';
 import mimeTypes from 'mime-types';
-import sanitizeHtml from 'sanitize-html';
+import DOMPurify from 'dompurify';
 import {
   GENERIC_EMPTY_MANIFEST_MESSAGE,
   GENERIC_ERROR_MESSAGE,
@@ -12,11 +12,11 @@ import {
   identifyMachineGen
 } from './utility-helpers';
 
-// HTML tags and attributes allowed in IIIF
-const HTML_SANITIZE_CONFIG = {
-  allowedTags: ['a', 'b', 'br', 'i', 'img', 'p', 'small', 'span', 'sub', 'sup'],
-  allowedAttributes: { 'a': ['href'], 'img': ['src', 'alt'] },
-  allowedSchemesByTag: { 'a': ['http', 'https', 'mailto'] }
+// HTML tags and attributes allowed in IIIF metadata values.
+const DOMPURIFY_CONFIG = {
+  ALLOWED_TAGS: ['a', 'b', 'br', 'i', 'img', 'p', 'small', 'span', 'sub', 'sup'],
+  ALLOWED_ATTR: ['href', 'src', 'alt'],
+  ALLOWED_URI_REGEXP: /^(?:https?|mailto):/i,
 };
 
 // Do not build structures for the following 'Range' behaviors:
@@ -163,11 +163,14 @@ export function getMediaInfo({ manifest, canvasIndex, startTime, srcIndex = 0, i
     // Read supplementing resources fom annotations
     const supplementingRes = parseResourceAnnotations(annotations, duration, 'supplementing');
 
-    tracks = supplementingRes ? supplementingRes.resources : [];
+    const allSupplementing = supplementingRes ? supplementingRes.resources : [];
+    const audioDescTracks = allSupplementing.filter(t => t.kind === 'descriptions');
+    tracks = allSupplementing.filter(t => t.kind !== 'descriptions');
 
     const mediaInfo = {
       sources,
       tracks,
+      audioDescTracks,
       canvasTargets,
       isMultiSource,
       error,
@@ -347,9 +350,10 @@ export function getCustomStart(manifest, startCanvasId, startCanvasTime) {
     return { currentIndex, startTime };
   };
   if (startProp != undefined) {
+    let canvasInfo = {};
     switch (startProp.type) {
       case 'Canvas':
-        let canvasInfo = getCanvasInfo(startProp.id, startProp.type, 0);
+        canvasInfo = getCanvasInfo(startProp.id, startProp.type, 0);
         return { type: 'C', canvas: canvasInfo.currentIndex, time: canvasInfo.startTime };
       case 'SpecificResource':
         let customStart = startProp.selector.t;
@@ -481,10 +485,10 @@ export function parseMetadata(metadata, resourceType) {
     metadata.map(md => {
       // get value and replace \n characters with <br/> to display new lines in UI
       let value = getLabelValue(md.value, true)?.replace(/\n/g, "<br />");
-      let sanitizedValue = sanitizeHtml(value, { ...HTML_SANITIZE_CONFIG });
+      let purifiedValue = DOMPurify.sanitize(value, { ...DOMPURIFY_CONFIG });
       parsedMetadata.push({
         label: getLabelValue(md.label),
-        value: sanitizedValue
+        value: purifiedValue
       });
     });
     return parsedMetadata;

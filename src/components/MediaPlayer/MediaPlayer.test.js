@@ -9,6 +9,8 @@ import noCaptionManifest from '@TestData/multiple-canvas-auto-advance';
 import emptyCanvasManifest from '@TestData/transcript-annotation';
 import playlistManifest from '@TestData/playlist';
 import emptyManifest from '@TestData/empty-manifest';
+import forcedTextTracksManifest from '@TestData/forced-text-tracks';
+import adManifest from '@TestData/ad-annotation';
 import * as hooks from '@Services/ramp-hooks';
 
 // Mock the Video.js language loader
@@ -223,6 +225,62 @@ describe('MediaPlayer component', () => {
         expect(screen.queryByTestId('videojs-title-link')).toBeInTheDocument();
       });
     });
+
+    describe('resumeCache', () => {
+      beforeEach(() => {
+        localStorage.setItem(
+          'playbackPositions',
+          JSON.stringify([
+            { key: 'https://example.com/manifest/lunchroom_manners/canvas/1', value: { time: 120, savedAt: Date.now() } },
+            { key: 'http://example.com/volleyball-for-boys/manifest/canvas/1', value: { time: 60, savedAt: Date.now() } }
+          ])
+        );
+      });
+
+      test('with default value renders player successfully', async () => {
+        const PlayerWithManifest = withManifestAndPlayerProvider(MediaPlayer, {
+          initialManifestState: { ...manifestState(videoManifest) },
+          initialPlayerState: {},
+        });
+        await act(async () => render(
+          <ErrorBoundary>
+            <PlayerWithManifest />
+          </ErrorBoundary>
+        ));
+        expect(screen.queryByTestId('media-player')).toBeInTheDocument();
+        // Clears the existing cache since enable is false by default
+        expect(localStorage.getItem('playbackPositions')).toBe('[]');
+      });
+
+      test('with enable=true and default values for others renders player successfully', async () => {
+        const PlayerWithManifest = withManifestAndPlayerProvider(MediaPlayer, {
+          initialManifestState: { ...manifestState(videoManifest) },
+          initialPlayerState: {},
+          resumeCache: { enable: true },
+        });
+        await act(async () => render(
+          <ErrorBoundary>
+            <PlayerWithManifest />
+          </ErrorBoundary>
+        ));
+        expect(screen.queryByTestId('media-player')).toBeInTheDocument();
+        expect(localStorage.getItem('playbackPositions')).not.toBe('[]');
+      });
+
+      test('with custom ttlDays and maxItems renders player successfully', async () => {
+        const PlayerWithManifest = withManifestAndPlayerProvider(MediaPlayer, {
+          initialManifestState: { ...manifestState(videoManifest) },
+          initialPlayerState: {},
+          resumeCache: { ttlDays: 7, maxItems: 50 },
+        });
+        await act(async () => render(
+          <ErrorBoundary>
+            <PlayerWithManifest />
+          </ErrorBoundary>
+        ));
+        expect(screen.queryByTestId('media-player')).toBeInTheDocument();
+      });
+    });
   });
 
   describe('withCredentials', () => {
@@ -412,6 +470,59 @@ describe('MediaPlayer component', () => {
           screen.queryAllByTestId('videojs-video-element').length
         ).toBeGreaterThan(0);
         expect(screen.queryByTitle('Captions')).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('AD button in the control bar', () => {
+    test('renders with a video canvas with supplementing descriptions annotation', async () => {
+      const PlayerWithManifest = withManifestAndPlayerProvider(MediaPlayer, {
+        initialManifestState: { ...manifestState(adManifest) },
+        initialPlayerState: {},
+      });
+      await act(async () => render(
+        <ErrorBoundary>
+          <PlayerWithManifest />
+        </ErrorBoundary>
+      ));
+      expect(
+        screen.queryAllByTestId('videojs-video-element').length
+      ).toBeGreaterThan(0);
+      await waitFor(() => {
+        expect(screen.queryByTitle('Toggle Audio Description')).toBeInTheDocument();
+      });
+    });
+
+    describe('does not render', () => {
+      test('with an audio canvas', () => {
+        const PlayerWithManifest = withManifestAndPlayerProvider(MediaPlayer, {
+          initialManifestState: { ...manifestState(adManifest, 1) },
+          initialPlayerState: {},
+        });
+        render(
+          <ErrorBoundary>
+            <PlayerWithManifest />
+          </ErrorBoundary>
+        );
+        expect(screen.queryByTitle('Toggle Audio Description')).not.toBeInTheDocument();
+      });
+
+      test('with a video canvas w/o supplementing descriptions annotations', async () => {
+        const PlayerWithManifest = withManifestAndPlayerProvider(MediaPlayer, {
+          initialManifestState: { ...manifestState(adManifest, 2) },
+          initialPlayerState: {},
+        });
+        await act(async () => render(
+          <ErrorBoundary>
+            <PlayerWithManifest />
+          </ErrorBoundary>
+        ));
+        expect(
+          screen.queryAllByTestId('videojs-video-element').length
+        ).toBeGreaterThan(0);
+        await waitFor(() => {
+          expect(screen.queryByTitle('Toggle Audio Description')).not.toBeInTheDocument();
+        });
       });
     });
   });
@@ -772,31 +883,107 @@ describe('MediaPlayer component', () => {
       });
     });
 
-    test('stores caption status into localStorage', async () => {
-      waitFor(() => {
-        const player = screen.getAllByTestId('videojs-video-element')[0].player;
-        player.triggerReady();
+    describe('stores caption status into localStorage', () => {
+      test('without forced captions', async () => {
+        waitFor(() => {
+          const player = screen.getAllByTestId('videojs-video-element')[0].player;
+          player.triggerReady();
 
-        expect(screen.queryByTitle('Captions')).toBeInTheDocument();
-        const captionsButton = screen.getByTitle('Captions');
+          expect(screen.queryByTitle('Captions')).toBeInTheDocument();
+          const captionsButton = screen.getByTitle('Captions');
 
-        // state on initial load
-        expect(mockLocalStorage['startCaptioned']).toEqual('true');
-        expect(captionsButton).toHaveClass('captions-on');
+          // state on initial load
+          expect(mockLocalStorage['startCaptioned']).toEqual('true');
+          expect(captionsButton).toHaveClass('captions-on');
 
-        // simulate captions off
-        fireEvent.click(captionsButton);
-        expect(screen.queryAllByRole('menuitemradio').length).toBeGreaterThan(1);
-        expect(screen.queryAllByRole('menuitemradio')[1].childNodes[1].textContent)
-          .toEqual('captions off');
+          // simulate captions off
+          fireEvent.click(captionsButton);
+          expect(screen.queryAllByRole('menuitemradio').length).toBeGreaterThan(1);
+          expect(screen.queryAllByRole('menuitemradio')[1].childNodes[1].textContent)
+            .toEqual('captions off');
 
-        expect(mockLocalStorage['startCaptioned']).toEqual("false");
-        expect(captionsButton).not.toHaveClass('captions-on');
+          expect(mockLocalStorage['startCaptioned']).toEqual("false");
+          expect(captionsButton).not.toHaveClass('captions-on');
+        });
+      });
+
+      describe('with forced captions', () => {
+        describe('with startCaptioned=false in localStorage', () => {
+          // Override localStorage with startCaptioned: false
+          beforeAll(() => {
+            mockLocalStorage = {
+              startCaptioned: false,
+            };
+          });
+
+          test('auto-enables forced caption track when it is the only track', async () => {
+            jest.clearAllMocks();
+
+            const PlayerWithManifest = withManifestAndPlayerProvider(MediaPlayer, {
+              initialManifestState: { ...manifestState(forcedTextTracksManifest) },
+              initialPlayerState: {},
+            });
+
+            render(<ErrorBoundary><PlayerWithManifest /></ErrorBoundary>);
+            window.HTMLMediaElement.prototype.load = () => { };
+            await act(() => Promise.resolve());
+
+            waitFor(() => {
+              const player = screen.getAllByTestId('videojs-video-element')[0].player;
+              player.triggerReady();
+
+              expect(screen.queryByTitle('Captions')).toBeInTheDocument();
+              expect(screen.getByTitle('Captions')).toHaveClass('captions-on');
+            });
+          });
+
+          test('auto-enables forced caption track when it is not the first track', async () => {
+            jest.clearAllMocks();
+
+            const PlayerWithManifest = withManifestAndPlayerProvider(MediaPlayer, {
+              initialManifestState: { ...manifestState(forcedTextTracksManifest, 1) },
+              initialPlayerState: {},
+            });
+
+            render(<ErrorBoundary><PlayerWithManifest /></ErrorBoundary>);
+            window.HTMLMediaElement.prototype.load = () => { };
+            await act(() => Promise.resolve());
+
+            waitFor(() => {
+              const player = screen.getAllByTestId('videojs-video-element')[0].player;
+              player.triggerReady();
+
+              expect(screen.queryByTitle('Captions')).toBeInTheDocument();
+              expect(screen.getByTitle('Captions')).toHaveClass('captions-on');
+            });
+          });
+
+          test('auto-enables forced caption track and not change startCaptioned flag', async () => {
+            jest.clearAllMocks();
+
+            const PlayerWithManifest = withManifestAndPlayerProvider(MediaPlayer, {
+              initialManifestState: { ...manifestState(forcedTextTracksManifest, 1) },
+              initialPlayerState: {},
+            });
+
+            render(<ErrorBoundary><PlayerWithManifest /></ErrorBoundary>);
+            window.HTMLMediaElement.prototype.load = () => { };
+            await act(() => Promise.resolve());
+
+            waitFor(() => {
+              const player = screen.getAllByTestId('videojs-video-element')[0].player;
+              player.triggerReady();
+
+              expect(screen.getByTitle('Captions')).toHaveClass('captions-on');
+              expect(mockLocalStorage['startCaptioned']).toEqual("false");
+            });
+          });
+        });
       });
     });
 
-    describe('Restoring', () => {
-      //Override localStorage mocking
+    describe('restores', () => {
+      // Override localStorage mocking
       beforeAll(() => {
         mockLocalStorage = {
           startQuality: 'Medium',
@@ -806,7 +993,7 @@ describe('MediaPlayer component', () => {
         };
       });
 
-      test('restores volume from localStorage', async () => {
+      test('volume from localStorage', async () => {
         waitFor(() => {
           const player = screen.getAllByTestId('videojs-video-element')[0].player;
           player.triggerReady();
@@ -815,7 +1002,7 @@ describe('MediaPlayer component', () => {
         });
       });
 
-      test('restores quality from localStorage', async () => {
+      test('quality from localStorage', async () => {
         waitFor(() => {
           const player = screen.getAllByTestId('videojs-video-element')[0].player;
           player.triggerReady();
@@ -829,7 +1016,7 @@ describe('MediaPlayer component', () => {
         });
       });
 
-      test('restores mute from localStorage', async () => {
+      test('mute from localStorage', async () => {
         waitFor(() => {
           const player = screen.getAllByTestId('videojs-video-element')[0].player;
           player.triggerReady();
@@ -838,7 +1025,7 @@ describe('MediaPlayer component', () => {
         });
       });
 
-      test('restores captions status from localStorage', async () => {
+      test('captions status from localStorage', async () => {
         waitFor(() => {
           const player = screen.getAllByTestId('videojs-video-element')[0].player;
           player.triggerReady();

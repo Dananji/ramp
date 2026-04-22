@@ -126,9 +126,9 @@ export const useMediaPlayer = () => {
  * Read Canvas information and update state to reload player on
  * Canvas changes
  * @param {Object} obj
- * @param {Boolean} obj.enableFileDownload
- * @param {Boolean} obj.withCredentials
- * @param {Number} obj.lastCanvasIndex
+ * @param {Boolean} obj.enableFileDownload turn ON/OFF file download in player controls
+ * @param {Boolean} obj.withCredentials turn ON/OFF credentials for source elements
+ * @param {Number} obj.lastCanvasIndex last canvas index in the curernt Manifest
  * @returns  {
  * isMultiSourced: bool,
  * isPlaylist: bool,
@@ -165,6 +165,7 @@ export const useSetupPlayer = ({
     error: '',
     sources: [],
     tracks: [],
+    audioDescTracks: [],
     poster: null,
     targets: [],
   });
@@ -207,7 +208,7 @@ export const useSetupPlayer = ({
    */
   const initCanvas = (canvasId, fromStart) => {
     const {
-      isMultiSource, sources, tracks, canvasTargets, mediaType, error, poster
+      isMultiSource, sources, tracks, audioDescTracks, canvasTargets, mediaType, error, poster
     } = getMediaInfo({
       manifest,
       canvasIndex: canvasId,
@@ -237,7 +238,7 @@ export const useSetupPlayer = ({
 
     setPlayerConfig({
       ...playerConfig,
-      error, sources, tracks, poster, targets: canvasTargets
+      error, sources, tracks, audioDescTracks, poster, targets: canvasTargets
     });
 
     const currentCanvas = allCanvases.find((c) => c.canvasIndex === canvasId);
@@ -312,6 +313,7 @@ export const useSetupPlayer = ({
  * Initialize and update VideoJS instance on global state changes when
  * Canvas changes
  * @param {Object} obj
+ * @param {Array} obj.audioDescTracks text-tracks for audioDescription functionality
  * @param {Object} obj.options VideoJS options
  * @param {Function} obj.playerInitSetup VideoJS initialize setup func
  * @param {String} obj.startQuality selected quality stored in local storage
@@ -327,9 +329,11 @@ export const useSetupPlayer = ({
  * setActiveId: func,
  * setFragmentMarker: func,
  * setIsReady: func,
+ * updateMenuDirection: func,
  * }
  */
 export const useVideoJSPlayer = ({
+  audioDescTracks,
   options,
   playerInitSetup,
   startQuality,
@@ -355,6 +359,7 @@ export const useVideoJSPlayer = ({
     isReadyRef.current = r;
   };
   const playerRef = useRef(null);
+  const visibilityHandlerRef = useRef(null);
   const setPlayer = (p) => {
     /**
      * When player is set to null, dispose player using Video.js' dispose()
@@ -370,6 +375,9 @@ export const useVideoJSPlayer = ({
       if (playerRef.current) {
         setPlayer(null);
         document.removeEventListener('keydown', playerHotKeys);
+        if (visibilityHandlerRef.current) {
+          document.removeEventListener('visibilitychange', visibilityHandlerRef.current);
+        }
         setIsReady(false);
       }
     };
@@ -408,7 +416,7 @@ export const useVideoJSPlayer = ({
       const player = playerRef.current;
 
       // Reset markers
-      if (activeId) player.markers?.removeAll();
+      if (activeId && typeof player.markers?.removeAll === 'function') player.markers.removeAll();
       setActiveId(null);
 
       // Block player while metadata is loaded when canvas is not empty
@@ -546,12 +554,11 @@ export const useVideoJSPlayer = ({
       }
     });
 
-    // Listen for resize events on desktop browsers and trigger player.resize event
-    window.addEventListener('resize', () => {
-      // Check if player is initialized before triggering resize event, especially helpful
-      // when switching the Manifest in the demo site without a page reload
+    /* Check if player is initialized before triggering resize event, especially helpful
+      when switching the Manifest in the demo site without a page reload */
+    const callPlayerResize = () => {
       if (player?.player_) player.trigger('resize');
-    });
+    };
 
     /**
      * The 'resize' event on window doesn't catch zoom in/out in iOS Safari.
@@ -559,12 +566,53 @@ export const useVideoJSPlayer = ({
      * zoomed in/out using OS/browser settings.
      */
     if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', () => {
-        // Check if player is initialized before triggering resize event, especially helpful
-        // when switching the Manifest in the demo site without a page reload
-        if (player?.player_) player.trigger('resize');
-      });
+      window.visualViewport.addEventListener('resize', callPlayerResize);
     }
+
+    // Re-evaluate menu direction on scroll and window resize events
+    const handleScrollOrResize = () => updateMenuDirection(player);
+
+    window.addEventListener('scroll', handleScrollOrResize);
+    window.addEventListener('resize', () => {
+      handleScrollOrResize();
+      // Listen for resize events on desktop browsers and trigger player.resize event.
+      callPlayerResize();
+    });
+
+    // Clean up window listeners when the player is destroyed
+    player.on('dispose', () => {
+      window.removeEventListener('scroll', handleScrollOrResize);
+      window.removeEventListener('resize', () => {
+        handleScrollOrResize();
+        callPlayerResize();
+      });
+    });
+
+    /**
+     * On iOS/iPadOS, the browser does not reliably pause media when switching tabs.
+     * Media continues advancing its clock, and media can be interrupted unpredictably 
+     * by iOS's OS-level audio session management.
+     * To prevent the playhead from jumping forward when the user returns to the tab,
+     * the player is paused when the tab becomes inactive and resume it when it becomes
+     * active again.
+     */
+    let wasPlayingBeforeHide = false;
+    const handleVisibilityChange = () => {
+      if (!playerRef.current) return;
+      if (document.hidden) {
+        wasPlayingBeforeHide = !playerRef.current.paused();
+        if (wasPlayingBeforeHide) {
+          playerRef.current.pause();
+          playerDispatch({ isPlaying: false, type: 'setPlayingStatus' });
+        }
+      } else if (wasPlayingBeforeHide) {
+        wasPlayingBeforeHide = false;
+        playerRef.current.play();
+        playerDispatch({ isPlaying: true, type: 'setPlayingStatus' });
+      }
+    };
+    visibilityHandlerRef.current = handleVisibilityChange;
+    document.addEventListener('visibilitychange', handleVisibilityChange);
   };
 
   /**
@@ -587,11 +635,13 @@ export const useVideoJSPlayer = ({
   };
 
   /**
-   * Build track HTML for Video.js player on initial page load
+   * Build track HTML for Video.js player on initial page load for both
+   * subtitle/caption and audio-description text-tracks
    */
   const buildTracksHTML = () => {
-    if (tracks?.length > 0 && videoJSRef.current) {
-      tracks.map((t) => {
+    const allTracks = [...(tracks ?? []), ...(audioDescTracks ?? [])];
+    if (allTracks.length > 0 && videoJSRef.current) {
+      allTracks.map((t) => {
         let trackEl = document.createElement('track');
         trackEl.setAttribute('key', t.key);
         trackEl.setAttribute('src', t.src);
@@ -603,6 +653,33 @@ export const useVideoJSPlayer = ({
     }
   };
 
+  /**
+   * Change the direction of the popup menu based on whether there is enough
+   * space above the player to show them without getting clipped by the viewport
+   */
+  const updateMenuDirection = (player) => {
+    const playerEl = playerRef.current?.el();
+    if (!playerEl) return;
+    const playerTop = playerEl.getBoundingClientRect().top;
+    // Get all VideoJS menus in the player
+    const menus = playerEl.querySelectorAll(
+      '.vjs-playback-rate .vjs-menu, .vjs-quality-selector .vjs-menu'
+    );
+    // Calculate tallest popup menu by breifly making it visible
+    const menuHeight = Array.from(menus).reduce((max, el) => {
+      const prev = el.style.display;
+      el.style.display = 'block';
+      const h = el.children?.length > 0 ? el.children[0].offsetHeight : 0;
+      el.style.display = prev;
+      return Math.max(max, h);
+    }, 0);
+    if (menuHeight > 0 && playerTop < menuHeight) {
+      player.addClass('vjs-menu-open-down');
+    } else {
+      player.removeClass('vjs-menu-open-down');
+    }
+  };
+
   return {
     activeId,
     fragmentMarker,
@@ -610,7 +687,8 @@ export const useVideoJSPlayer = ({
     playerRef,
     setActiveId,
     setFragmentMarker,
-    setIsReady
+    setIsReady,
+    updateMenuDirection
   };
 };
 
@@ -1025,9 +1103,9 @@ export const useTranscripts = ({
       transcriptParseAbort?.current?.abort();
       const canvasAnnotations = annotations
         .filter((a) => a.canvasIndex == canvasIndexRef.current);
-      if (canvasAnnotations?.length > 0 && canvasAnnotations[canvasIndexRef.current]?.annotationSets?.length > 0) {
+      if (canvasAnnotations?.length > 0 && canvasAnnotations[0]?.annotationSets?.length > 0) {
         // Filter supplementing annotations from all annotations in the Canvas
-        const transcriptAnnotations = canvasAnnotations[canvasIndexRef.current].annotationSets
+        const transcriptAnnotations = canvasAnnotations[0].annotationSets
           .filter((as) => as.motivation?.includes(TRANSCRIPT_MOTIVATION) || as.isSupplementing);
         // Convert annotations into Transcript component friendly format
         const transcriptItems = transcriptAnnotations?.length > 0
@@ -1291,7 +1369,8 @@ export const useSyncPlayback = ({
   const manifestDispatch = useContext(ManifestDispatchContext);
   const playerDispatch = useContext(PlayerDispatchContext);
 
-  const { clickedAnnotation } = manifestState;
+  // Check for manifestState, as Transcript component can exist without state provider
+  const clickedAnnotation = manifestState ? manifestState.clickedAnnotation : null;
   const { startTime, endTime, currentTime } = times;
 
   useEffect(() => {

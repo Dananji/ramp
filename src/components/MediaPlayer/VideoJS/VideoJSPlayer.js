@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import PropTypes from 'prop-types';
 import cx from 'classnames';
 import videojs from 'video.js';
@@ -6,17 +6,19 @@ import throttle from 'lodash/throttle';
 import 'videojs-markers-plugin/dist/videojs-markers-plugin';
 import 'videojs-markers-plugin/dist/videojs.markers.plugin.css';
 
-require('@silvermine/videojs-quality-selector')(videojs);
+import silvermine from '@silvermine/videojs-quality-selector';
 import '@silvermine/videojs-quality-selector/dist/css/quality-selector.css';
 
 import { usePlayerDispatch, usePlayerState } from '../../../context/player-context';
 import { useManifestState, useManifestDispatch } from '../../../context/manifest-context';
-import { checkSrcRange, getMediaFragment, roundToPrecision } from '@Services/utility-helpers';
+import { checkSrcRange, getMediaFragment, offsetTextTrackCues, roundToPrecision } from '@Services/utility-helpers';
 import {
   IS_ANDROID, IS_IOS, IS_IPAD, IS_MOBILE,
   IS_SAFARI, IS_TOUCH_ONLY
 } from '@Services/browser';
 import { useLocalStorage } from '@Services/local-storage';
+import { usePlaybackPositions } from '@Services/save-playback-positions';
+import { showResumeModal } from './VideoJSResumeModal';
 import { SectionButtonIcon } from '@Services/svg-icons';
 import {
   useMediaPlayer, useSetupPlayer, useShowInaccessibleMessage, useVideoJSPlayer
@@ -32,11 +34,13 @@ import VideoJSNextButton from './components/js/VideoJSNextButton';
 import VideoJSPreviousButton from './components/js/VideoJSPreviousButton';
 import VideoJSTitleLink from './components/js/VideoJSTitleLink';
 import VideoJSTrackScrubber from './components/js/VideoJSTrackScrubber';
+import VideoJSADButton from './components/js/VideoJSADButton';
 
 /**
  * Module to setup VideoJS instance on initial page load and update
  * on successive player reloads on Canvas changes.
  * @param {Object} props
+ * @param {Array} props.audioDescTracks
  * @param {Boolean} props.isVideo
  * @param {Boolean} props.isPlaylist
  * @param {Object} props.trackScrubberRef
@@ -52,11 +56,13 @@ import VideoJSTrackScrubber from './components/js/VideoJSTrackScrubber';
  * @param {Object} props.options
  */
 function VideoJSPlayer({
+  audioDescTracks,
   enableFileDownload,
   enableTitleLink,
   isVideo,
   options,
   placeholderText,
+  resumeCache,
   scrubberTooltipRef,
   tracks,
   trackScrubberRef,
@@ -69,9 +75,12 @@ function VideoJSPlayer({
   const manifestDispatch = useManifestDispatch();
 
   const {
+    allCanvases,
     canvasDuration,
     canvasLink,
+    customStart,
     hasMultiItems,
+    manifest,
     targets,
     autoAdvance,
     structures,
@@ -85,9 +94,19 @@ function VideoJSPlayer({
   const [startCaptioned, setStartCaptioned] = useLocalStorage('startCaptioned', true);
   const [startQuality, setStartQuality] = useLocalStorage('startQuality', null);
 
+  const { savePosition, getPosition, clearPosition } = usePlaybackPositions({
+    enable: resumeCache?.enable,
+    maxItems: resumeCache?.maxItems,
+    ttlDays: resumeCache?.ttlDays,
+  });
+
   const videoJSRef = useRef(null);
   const captionsOnRef = useRef();
   const activeTextTrackRef = useRef();
+  const isForcedTextTrackRef = useRef(false);
+  // Ref to store track.change event handler with up-to-date sticky settings
+  const trackChangeHandlerRef = useRef(null);
+  const resumeModalRef = useRef(null);
 
   const { canvasIndex, canvasIsEmpty, isMultiCanvased, lastCanvasIndex } = useMediaPlayer();
   const { isPlaylist, renderingFiles, srcIndex, switchPlayer }
@@ -115,8 +134,37 @@ function VideoJSPlayer({
   const tracksRef = useRef();
   tracksRef.current = useMemo(() => { return tracks; }, [tracks]);
 
+  const audioDescTracksRef = useRef();
+  audioDescTracksRef.current = useMemo(() => { return audioDescTracks; }, [audioDescTracks]);
+
   const clickedUrlRef = useRef();
   clickedUrlRef.current = useMemo(() => { return clickedUrl; }, [clickedUrl]);
+
+  // Register the videojs-quality-selector plugin before initialization
+  silvermine(videojs);
+
+  const canvasDurationRef = useRef();
+  canvasDurationRef.current = useMemo(() => { return canvasDuration; }, [canvasDuration]);
+
+  // Refs so the throttled handleTimeUpdate closure always reads current values
+  const canvasURLRef = useRef(null);
+  useEffect(() => {
+    canvasURLRef.current = allCanvases[canvasIndex]?.canvasURL ?? null;
+  }, [allCanvases, canvasIndex]);
+
+  const manifestURLRef = useRef(null);
+  useEffect(() => {
+    manifestURLRef.current = manifest?.id ?? null;
+  }, [manifest]);
+
+  // Delay resume modal when a cross-Canvas switch is needed
+  const pendingResumeRef = useRef(null);
+
+  const savePositionRef = useRef();
+  savePositionRef.current = savePosition;
+
+  // Flag to track whether srcIndex has changed since last load
+  const srcIndexChangedRef = useRef();
 
   /**
    * Setup player with player-related information parsed from the IIIF
@@ -164,19 +212,22 @@ function VideoJSPlayer({
         // Need to set this once experimentalSvgIcons option in Video.js options was enabled
         player.getChild('controlBar').qualitySelector.setIcon('cog');
       }
+
+      // Update popup menu directions as needed
+      updateMenuDirection(player);
     });
 
     player.on('emptied', () => {
       /**
-       * In the quality-selector plugin used in Ramp, when the player is using remote 
+       * In the quality-selector plugin used in Ramp, when the player is using remote
        * text tracks they get cleared upon quality selection.
        * This is a known issue with @silvermine/videojs-quality-selector plugin.
-       * When a new source is selected this event is invoked. So, we are using this event
-       * to check whether the current video player has tracks when tracks are available as
-       * annotations in the Manifest and adding them back in.
+       * When a new source from the quality selector is selected 'emptied' event is trigger.
+       * Therefore, leverage this event to check whether the current video player has tracks, and
+       * when tracks are available as annotations in the Manifest add them back.
        */
       if (tracksRef.current?.length > 0 && isVideo
-        && player.textTracks()?.length <= tracksRef.current?.length) {
+        && player.textTracks()?.length <= tracksRef.current?.length && !srcIndexChangedRef.current) {
         // Remove any existing text tracks in Safari, as it handles tracks differently
         if (IS_SAFARI) {
           let oldTracks = player.remoteTextTracks();
@@ -194,6 +245,13 @@ function VideoJSPlayer({
           }
           player.addRemoteTextTrack(track, false);
         });
+      }
+      // Offset cues for multi-source playback after quality selection
+      if (player.targets?.length > 1) {
+        const currentTarget = player.targets[player.srcIndex];
+        if (currentTarget) {
+          offsetTextTrackCues(player, currentTarget.altStart || 0, currentTarget.duration || 0);
+        }
       }
     });
     player.on('canplay', () => {
@@ -221,6 +279,8 @@ function VideoJSPlayer({
         if (isReadyRef.current && isPlayingRef.current) {
           playerDispatch({ isEnded: true, type: 'setIsEnded' });
           player.pause();
+          // Clear the saved playback position when media ends
+          if (manifestURLRef.current) clearPosition(manifestURLRef.current);
           if (!canvasIsEmptyRef.current) handleEnded();
         }
       }, 100);
@@ -229,6 +289,28 @@ function VideoJSPlayer({
       setStartMuted(player.muted());
       setStartVolume(player.volume());
     });
+    /**
+     * On iOS, the OS audio session can be revoked by another tab or app, leaving the
+     * player in a stuck state where the playhead moves but no audio is produced, or
+     * the buffer stalls indefinitely. Reload the source to recover.
+     */
+    if (IS_IOS) {
+      let stallTimer = null;
+      player.on('stalled', () => {
+        stallTimer = setTimeout(() => {
+          if (!player.paused() && player.readyState() < 3) {
+            player.load();
+            player.play();
+          }
+        }, 2000);
+      });
+      player.on('playing', () => {
+        if (stallTimer) {
+          clearTimeout(stallTimer);
+          stallTimer = null;
+        }
+      });
+    }
     /**
      * Setting 'isReady' to true triggers the 'videojs-markers' plugin to add track/playlist/search 
      * markers to the progress-bar.
@@ -284,6 +366,11 @@ function VideoJSPlayer({
         && player.currentTime() != currentTimeRef.current) {
         player.currentTime(currentTimeRef.current);
       }
+      // Cancel any active speech synthesis on seek action when it is NOT the initial 'seek' on player load
+      if (window.speechSynthesis && player.readyState() == 4 && player.currentTime() != 0) {
+        window.speechSynthesis.cancel();
+      }
+
       /**
        * Use setTimeout to add dispatch action to update global state with the current time from 'seek' action,
        * to the event queue to be called when the current call stack is empty. 
@@ -417,20 +504,41 @@ function VideoJSPlayer({
       if (errorDisplay) {
         errorDisplay.contentEl().innerText = errorMessage;
         errorDisplay.removeClass('vjs-hidden');
+        errorDisplay.el().removeAttribute('aria-hidden');
+        errorDisplay.el().setAttribute('tabindex', '0');
         player.removeClass('vjs-error');
         player.removeClass('vjs-disabled');
 
         if (isMultiCanvased) {
           // Show control bar in error state for multi-canvased manifests
           setControlBar(player, true);
+          /* Remove all focusable elements in the player's control bar from the tab
+          order except previous/next buttons for easy navigation away from invalid Canvas */
+          player.controlBar.el().querySelectorAll('button, [tabindex]').forEach((focusable) => {
+            if (!focusable.closest('.vjs-previous-button')
+              && !focusable.closest('.vjs-next-button')) {
+              focusable.setAttribute('tabindex', '-1');
+            }
+          });
         } else {
           // Hide control bar for single-canvas manifests
           player.controlBar.hide();
         }
+        // Focus modal so screen readers announce the error
+        errorDisplay.el().focus();
       }
       e.stopPropagation();
     });
     playerLoadedMetadata(player);
+    /**
+     * Show resume modal only for the initial page load, not on Canvas switches.
+     * This first loaded Canvas can be either the first Canvas in the Manifest or the
+     * Canvas corresponding to the 'startCanavasId' prop if it is provided.
+     * With the use of 'player.one' this is scoped only to the first load.
+     */
+    player.one('loadedmetadata', () => {
+      resumePlaybackModal(player);
+    });
   };
 
   /**
@@ -456,6 +564,10 @@ function VideoJSPlayer({
       .filter(s => !player.failedSources.includes(s.src));
 
     if (availableSources.length === 0) {
+      /* When all sources fail sequentially, make the error display modal uncloseable
+      and keep it visible until the user navigates away or reloads */
+      player.getChild('ErrorDisplay').closeable(false);
+
       console.error('All sources in the Canvas have failed to load.');
       return {
         shouldFallback: false,
@@ -591,11 +703,33 @@ function VideoJSPlayer({
     const errorDisplay = player.getChild('ErrorDisplay');
     if (errorDisplay) errorDisplay.addClass('vjs-hidden');
 
+    // Restore tab order for all player controls that were removed during error state
+    if (player.controlBar) {
+      player.controlBar.el().querySelectorAll('button, [tabindex]').forEach((focusable) => {
+        focusable.removeAttribute('tabindex');
+      });
+    }
+
+    /* Remove any resume playback modal in the DOM. Call close() to restore
+    player controls before removing the modal element from the DOM. */
+    if (resumeModalRef.current) {
+      resumeModalRef.current.close();
+      resumeModalRef.current.el()?.remove();
+    }
+
     player.duration(canvasDuration);
     player.src(options.sources);
     player.poster(options.poster);
     player.canvasIndex = cIndexRef.current;
     player.canvasIsEmpty = canvasIsEmptyRef.current;
+    /* The source change for multi-source canvases triggers 'emptied' event identical
+    to 'qualityRequested' event.
+    And 'qualityRequested' event from the plugin clears the text-tracks in the player,
+    which needs to be added back in the 'emptied' event listener.
+    However, for the 'emptied' event triggered by source change for a multi-source Canvas
+    the text-tracks are not cleared. And this flag is used to distinguish between the origin
+    of the 'emptied' event to avoid duplication of text-tracks in the player. */
+    srcIndexChangedRef.current = player.srcIndex != srcIndex;
     player.srcIndex = srcIndex;
     player.targets = targets;
     if (enableTitleLink) player.canvasLink = canvasLink;
@@ -610,16 +744,34 @@ function VideoJSPlayer({
       tracks.forEach(function (track) {
         player.addRemoteTextTrack(track, false);
       });
+
+      // Offset cues for multi-source playback after Canvas change
+      if (targets?.length > 1 && targets[srcIndex]) {
+        const { altStart, duration } = targets[srcIndex];
+        offsetTextTrackCues(player, altStart || 0, duration || 0);
+      }
+    }
+
+    // Add audio description tracks to the player
+    if (audioDescTracksRef.current?.length > 0 && isVideo) {
+      audioDescTracksRef.current.forEach(function (track) {
+        player.addRemoteTextTrack(track, false);
+      });
+    }
+
+    // Cancel any active speech synthesis on Canvas change
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
     }
 
     /*
       Update player control bar for;
-       - track scrubber button
-       - volume panel
-       - if tracks exists: captions button for video players
-       - appearance of the player: big play button and aspect ratio of the player 
+        - track scrubber button
+        - volume panel
+        - if tracks exists: captions button for video players
+        - appearance of the player: big play button and aspect ratio of the player
         based on media type
-       - file download menu
+        - file download menu
     */
     if (player.getChild('controlBar') != null && !canvasIsEmpty) {
       const controlBar = player.getChild('controlBar');
@@ -664,8 +816,10 @@ function VideoJSPlayer({
         let subsCapBtn = controlBar.addChild(
           'subsCapsButton', {}, volumeIndex + 1
         );
-        // Add CSS to mark captions-on
-        subsCapBtn.children_[0].addClass('captions-on');
+        // Add CSS to mark captions-on if its turned on sticky settings
+        if (startCaptioned) {
+          subsCapBtn.children_[0].addClass('captions-on');
+        }
       }
 
       /*
@@ -737,7 +891,15 @@ function VideoJSPlayer({
        * highlights are correctly synchronized.
        */
       const targetTime = isEndedRef.current
-        ? 0 : Math.max(currentTimeRef.current, player.currentTime());
+        ? 0
+        /**
+         * On iOS, player.currentTime() cannot be trusted here, because iOS may advance the media
+         * clock in the background before the 'visibilitychange' handler has a chance to pause the
+         * player. This makes the player.currentTime() stale with the forward-jumped value. In this
+         * scenario trust the currentTimeRef which is alwayes paused/frozen by 'visibilitychange'
+         * handler.
+         */
+        : (IS_IOS ? currentTimeRef.current : Math.max(currentTimeRef.current, player.currentTime()));
       player.currentTime(targetTime);
 
       // Update control-bar width on player reload
@@ -761,6 +923,11 @@ function VideoJSPlayer({
        */
       if ((IS_SAFARI || IS_IOS) && player.readyState() != 4) {
         player.load();
+        // Re-set manually set duration overwritten by Safari's native 'durationchange' event
+        // in the load cycle initiated by the preceeding player.load() call.
+        player.one('loadeddata', () => {
+          player.duration(canvasDuration);
+        });
       }
 
       if (isEndedRef.current || isPlayingRef.current) {
@@ -789,7 +956,18 @@ function VideoJSPlayer({
         }
       }
 
-      if (isVideo) { setUpCaptions(player); }
+      if (isVideo) {
+        setUpCaptions(player);
+        if (audioDescTracksRef.current?.length > 0) {
+          /** 
+           * Refresh the AD track cuechange listener after new tracks are loaded.
+           * This needs to be addressed here, because the VideoJS custom components
+           * are not able to catch the 'loadedmetadata' player event to do this.
+          */
+          const adBtn = player.getChild('controlBar')?.getChild('VideoJSADButton');
+          if (adBtn?.refreshTrack) adBtn.refreshTrack();
+        }
+      }
 
       /*
         Set playable duration within the given media file and alternate start time as
@@ -814,13 +992,26 @@ function VideoJSPlayer({
       if (IS_SAFARI) {
         handleTimeUpdate();
       }
+
+      // Offset cues for multi-source playback after metadata loads
+      if (player.targets?.length > 1 && player.targets[srcIndex]) {
+        const { altStart, duration } = player.targets[player.srcIndex];
+        offsetTextTrackCues(player, altStart || 0, duration || 0);
+      }
+
+      // After a Canvas switch for resume playback, show the modal on the new Canvas
+      if (pendingResumeRef.current) {
+        const { time, manifestURL } = pendingResumeRef.current;
+        pendingResumeRef.current = null;
+        showResumeModal(player, resumeModalRef, time, manifestURL, clearPosition, true);
+      }
     });
   };
 
   const {
-    activeId, fragmentMarker, isReadyRef, playerRef, setActiveId, setFragmentMarker, setIsReady
+    activeId, fragmentMarker, isReadyRef, playerRef, setActiveId, setFragmentMarker, setIsReady, updateMenuDirection
   } = useVideoJSPlayer({
-    options, playerInitSetup, updatePlayer, startQuality, tracks, videoJSRef, videoJSLangMap
+    audioDescTracks, options, playerInitSetup, updatePlayer, startQuality, tracks, videoJSRef, videoJSLangMap
   });
 
   let cIndexRef = useRef();
@@ -836,29 +1027,45 @@ function VideoJSPlayer({
   const setUpCaptions = (player) => {
     let textTracks = player.textTracks();
     /* 
-      Filter the text track Video.js adds with an empty label and language 
-      when nativeTextTracks are enabled for iPhones and iPads.
+      Cleanup empty and duplicated text tracks added in iOS/WebKit handling
+      when 'nativeTextTracks' are enabled.
       Related links, Video.js => https://github.com/videojs/video.js/issues/2808 and
       in Apple => https://developer.apple.com/library/archive/qa/qa1801/_index.html
     */
     if (IS_MOBILE && !IS_ANDROID) {
       textTracks.on('addtrack', () => {
+        // Remove empty label text tracks and duplicated text tracks
+        const seen = new Set();
+        const tracksToRemove = [];
         for (let i = 0; i < textTracks.length; i++) {
-          if (textTracks[i].language === '' && textTracks[i].label === '') {
-            player.textTracks().removeTrack(textTracks[i]);
+          const t = textTracks[i];
+          if (t.language === '' && t.label === '') {
+            tracksToRemove.push(t);
+          } else {
+            const key = `${t.label}|${t.language}`;
+            if (seen.has(key)) {
+              tracksToRemove.push(t);
+            } else {
+              seen.add(key);
+            }
           }
-          /**
-           * This enables the caption in the native iOS player first playback.
-           * Only enable caption when captions are turned on.
-           * First caption is already turned on in the code block below, so read it
-           * from activeTrackRef
-           */
-          if (startCaptioned && activeTextTrackRef.current) {
-            textTracks.tracks_.filter(t =>
-              t.label === activeTextTrackRef.current.label
-              && t.language === activeTextTrackRef.current.language)[0].mode = 'showing';
-          }
-
+        }
+        tracksToRemove.forEach(t => player.textTracks().removeTrack(t));
+        /**
+         * Enable caption in the native iOS player on first playback only when an
+         * an active text track is present. This could be either forced or the first
+         * caption/subtitle based on the 'startCaptioned' flag in localStorage.
+         */
+        if (activeTextTrackRef.current) {
+          const match = textTracks.tracks_.filter(t =>
+            t.label === activeTextTrackRef.current.label
+            && t.language === activeTextTrackRef.current.language);
+          if (match[0]) match[0].mode = 'showing';
+        }
+        // Offset cues for multi-source playback after text tracks are cleaned for iOS
+        if (player.targets?.length > 1 && player.targets[player.srcIndex]) {
+          const { altStart, duration } = player.targets[player.srcIndex];
+          offsetTextTrackCues(player, altStart || 0, duration || 0);
         }
       });
     }
@@ -871,37 +1078,136 @@ function VideoJSPlayer({
       // Disable all text tracks to avoid multiple selections and pick the first one as default
       for (let i = 0; i < textTracks.tracks_.length; i++) {
         let t = textTracks.tracks_[i];
-        if ((t.kind === 'subtitles' || t.kind === 'captions') && (t.language != '' && t.label != '')) {
+        if ((t.kind === 'subtitles' || t.kind === 'captions' || t.kind === 'descriptions') &&
+          (t.language != '' && t.label != '')) {
           t.mode = 'disabled';
-          if (!onFirstCap) firstSubCap = t;
+          if (!onFirstCap && t.kind !== 'descriptions') firstSubCap = t;
           onFirstCap = true;
         }
       }
 
-      // Enable the first caption when captions are enabled in the session
-      if (firstSubCap && startCaptioned) {
-        ;
-        firstSubCap.mode = 'showing';
-        activeTextTrackRef.current = firstSubCap;
+      /**
+       * Find if there is a forced text track for the Canvas. Use tracksRef built from the parsed
+       * information from Manifest to identify the forced subtitle/caption file and then, find the relevant
+       * VideoJS textTrack object from VideoJS' textTrack.tracks_ list to set the 'mode' to 'showing'.
+       */
+      const forcedTrackSource = tracksRef.current?.find(t => t.forced);
+      const forcedSubCap = forcedTrackSource && textTracks.tracks_.find(
+        t => t.label === forcedTrackSource.label && t.language === forcedTrackSource.srclang
+      );
+      // Seed the 'isForcedTextTrackRef' before mode='showing' triggers the 'change' event
+      isForcedTextTrackRef.current = forcedSubCap ? true : false;
+
+      /**
+       * Enable the relevant text track based on the following priority order:
+       * 1. Forced subtitle/caption track for the Canvas if it exists
+       * 2. First caption/subtitle track in the textTracks list when captions are turned
+       * on via localStorage 'startCaptioned' flag
+       */
+      const trackToEnable = forcedSubCap || (startCaptioned ? firstSubCap : null);
+      if (trackToEnable) {
+        /**
+         * Set activeTextTrackRef before mode change, so that the 'change' event handler
+         * can correctly identify this as the active text track.
+         */
+        activeTextTrackRef.current = trackToEnable;
+        trackToEnable.mode = 'showing';
         handleCaptionChange(true);
+      }
+
+      // Add a tooltip for the forced text track menu item for added information and a11y
+      if (forcedSubCap) {
+        const applyForcedMenuItemStyle = () => {
+          const subsButton = player.controlBar?.getChild('SubsCapsButton')
+            || player.controlBar?.getChild('subsCapsButton');
+          if (!subsButton) return;
+          const items = subsButton.menu?.children() || [];
+          items.forEach(item => {
+            if (item.track && item.track.label === forcedSubCap.label
+              && item.track.language === forcedSubCap.language) {
+              const el = item.el();
+              if (!el) return;
+              el.setAttribute('title', 'This track gets auto-enabled by the content on load');
+            }
+          });
+        };
+        // Store in the player instance the change handler can call it
+        player._applyForcedMenuItemStyle = applyForcedMenuItemStyle;
+      } else {
+        player._applyForcedMenuItemStyle = null;
       }
     }
 
-    // Add/remove CSS to indicate captions/subtitles is turned on
-    textTracks.on('change', () => {
+    /* Remove existing track.change event handlers from previous Canvases reading 
+    stale values for startCaptioned sticky setting. */
+    if (trackChangeHandlerRef.current) {
+      textTracks.off('change', trackChangeHandlerRef.current);
+    }
+    const handleTrackChange = () => {
+      /**
+       * Safari/WebKit can asynchronously enable additional text tracks as a 'nativeTextTracks'
+       * config's side effect.
+       * The 'change' event handler's last-write-wins loop then picks up the second track and
+       * overwrites 'activeTextTrackRef.current', and it breaks the guard that protects setting
+       * the 'startCaptioned' flag in localStorage.
+       * Therefore, if the intended active track is already showing, disable any other tracks with
+       * mode='showing' before the loop updates the 'activeTextTrackRef.current' to prevent state corruption.
+       */
+      if ((IS_SAFARI || (IS_MOBILE && !IS_ANDROID)) && activeTextTrackRef.current) {
+        const activeTrackIsShowing = Array.from({ length: textTracks.tracks_.length },
+          (_, i) => textTracks.tracks_[i]).some(
+            t => t.label === activeTextTrackRef.current.label
+              && t.language === activeTextTrackRef.current.language
+              && t.mode === 'showing'
+          );
+        if (activeTrackIsShowing) {
+          for (let i = 0; i < textTracks.tracks_.length; i++) {
+            const t = textTracks.tracks_[i];
+            if ((t.kind === 'subtitles' || t.kind === 'captions')
+              && t.mode === 'showing'
+              && !(t.label === activeTextTrackRef.current.label
+                && t.language === activeTextTrackRef.current.language)) {
+              t.mode = 'disabled';
+            }
+          }
+        }
+      }
       let trackModes = [];
       for (let i = 0; i < textTracks.tracks_.length; i++) {
         const { mode, label, kind } = textTracks[i];
-        trackModes.push(textTracks[i].mode);
+        // Collect track modes
+        if (kind != 'descriptions') trackModes.push(mode);
         if (mode === 'showing' && label != ''
           && (kind === 'subtitles' || kind === 'captions')) {
           activeTextTrackRef.current = textTracks[i];
         }
       }
+      // Add/remove CSS to indicate captions/subtitles is turned on
       const subsOn = trackModes.includes('showing') ? true : false;
       handleCaptionChange(subsOn);
-      setStartCaptioned(subsOn);
-    });
+      /**
+       * Update 'startCaptioned' in localStorage based on user interactions:
+       * - If a forced track is showing and 'startCaptioned' was false => preserve false as this is auto-enabled without a user action
+       * - All other cases: update to reflect current caption state
+       *
+       * Re-check isForcedTextTrackRef against the currently active track so that if the
+       * user manually switches away from the forced track, the flag updates accordingly.
+       */
+      const activeIsForced = activeTextTrackRef.current
+        && tracksRef.current?.some(
+          t => t.forced && t.label === activeTextTrackRef.current.label
+            && t.srclang === activeTextTrackRef.current.language
+        );
+      isForcedTextTrackRef.current = !!activeIsForced;
+      if (!(subsOn && isForcedTextTrackRef.current && !startCaptioned)) {
+        setStartCaptioned(subsOn);
+      }
+      if (player._applyForcedMenuItemStyle) player._applyForcedMenuItemStyle();
+    };
+
+    // Register new track.change handler with the current startCaptioned closure value
+    trackChangeHandlerRef.current = handleTrackChange;
+    textTracks.on('change', handleTrackChange);
   };
 
   /**
@@ -958,10 +1264,9 @@ function VideoJSPlayer({
         playerRef.current.markers.removeAll();
       }
       if (hasMultiItems) {
-        // When there are multiple sources in a single canvas
-        // advance to next source
-        if (srcIndex + 1 < targets.length) {
-          manifestDispatch({ srcIndex: srcIndex + 1, type: 'setSrcIndex' });
+        // When there are multiple sources in a single canvas advance to next source
+        if (srcIndexRef.current + 1 < targets.length) {
+          manifestDispatch({ srcIndex: srcIndexRef.current + 1, type: 'setSrcIndex' });
           playerDispatch({ currentTime: 0, type: 'setCurrentTime' });
           playerRef.current.play();
         } else {
@@ -1025,6 +1330,13 @@ function VideoJSPlayer({
       if (hasMultiItems && srcIndexRef.current > 0) {
         playerTime = playerTime + targets[srcIndexRef.current].altStart;
       }
+
+      // Persist playback position, skip near-start and near-end to avoid unhelpful resumes
+      const isHelpfulResume = playerTime > 5 && playerTime < canvasDurationRef.current - 5;
+      if (manifestURLRef.current && canvasURLRef.current && isHelpfulResume) {
+        savePositionRef.current(manifestURLRef.current, canvasURLRef.current, playerTime);
+      }
+
       const activeSegment = getActiveSegment(playerTime);
       // the active segment has changed
       if (activeIdRef.current !== activeSegment?.id) {
@@ -1152,6 +1464,52 @@ function VideoJSPlayer({
   };
 
   /**
+   * Show the resume modal if a saved playback position exists for the current Manifest.
+   * For multi-canvas manifests, load the saved Canvas first, then show the resume modal
+   * after the Canvas switch settles.
+   * @param {Object} player Video.js player instance
+   */
+  const resumePlaybackModal = (player) => {
+    /* Skip the resume playback modal when,
+    - there is a custom start indicated via 'startCanvasTime' prop
+    - the Manifest is a playlist
+    */
+    if (customStart?.startTime > 0 || isPlaylist) return;
+
+    const manifestURL = manifestURLRef.current;
+    if (!manifestURL) return;
+
+    const saved = getPosition(manifestURL);
+    if (!saved || saved.time <= 0) return;
+
+    const { canvasURL: savedCanvasURL, time: savedTime } = saved;
+
+    /* When a 'startCanvasId' is set, only show resume modal if the saved position
+    is on the 'startCanvasId' Canvas. Ignore saves on any other canvas. */
+    if (customStart?.startIndex > 0) {
+      const startCanvasURL = allCanvases[customStart.startIndex]?.canvasURL;
+      if (savedCanvasURL !== startCanvasURL) return;
+    }
+
+    if (savedCanvasURL !== canvasURLRef.current) {
+      // When saved position is on a different Canvas load the saved Canvas first
+      const savedCanvasIndex = allCanvases.findIndex((c) => c.canvasURL === savedCanvasURL);
+      if (savedCanvasIndex === -1) {
+        // When the saved Canvas is no longer in Manifest clear the stale entry and don't show the modal
+        clearPosition(manifestURL);
+        return;
+      }
+      // Store pending resume info so 'playerLoadedMetadata' can show the modal after the switch
+      pendingResumeRef.current = { time: savedTime, manifestURL };
+      manifestDispatch({ type: 'switchCanvas', canvasIndex: savedCanvasIndex });
+      return;
+    }
+
+    // If the loaded Canvas is the same as the saved one, show the modal immediately
+    showResumeModal(player, resumeModalRef, savedTime, manifestURL, clearPosition);
+  };
+
+  /**
    * Click event handler for previous/next buttons in inaccessible
    * message display
    * @param {Number} c updated Canvas index upon event trigger
@@ -1169,9 +1527,11 @@ function VideoJSPlayer({
    * @param {String} btnName name of the pressed button
    */
   const handlePrevNextKeydown = (e, c, btnName) => {
+    e.preventDefault();
     if (e.which === 32 || e.which === 13) {
       switchPlayer(c, true, btnName);
     }
+    e.stopPropagation();
   };
 
   return (
@@ -1199,7 +1559,9 @@ function VideoJSPlayer({
                   <button aria-label="Go back to previous item"
                     onClick={() => handlePrevNextClick(canvasIndex - 1)}
                     onKeyDown={(e) => handlePrevNextKeydown(e, canvasIndex - 1, 'previousBtn')}
-                    data-testid="inaccessible-previous-button">
+                    data-testid="inaccessible-previous-button"
+                    className="placeholder-previous-button"
+                    role="button">
                     <SectionButtonIcon flip={true} /> Previous
                   </button>
                 }
@@ -1207,7 +1569,9 @@ function VideoJSPlayer({
                   <button aria-label="Go to next item"
                     onClick={() => handlePrevNextClick(canvasIndex + 1)}
                     onKeyDown={(e) => handlePrevNextKeydown(e, canvasIndex + 1, 'nextBtn')}
-                    data-testid="inaccessible-next-button">
+                    data-testid="inaccessible-next-button"
+                    className="placeholder-next-button"
+                    role="button">
                     Next <SectionButtonIcon />
                   </button>
                 }
@@ -1254,11 +1618,13 @@ function VideoJSPlayer({
 };
 
 VideoJSPlayer.propTypes = {
+  audioDescTracks: PropTypes.array,
   enableFileDownload: PropTypes.bool,
   enableTitleLink: PropTypes.bool,
   isVideo: PropTypes.bool,
   options: PropTypes.object,
   placeholderText: PropTypes.string,
+  resumeCache: PropTypes.object,
   scrubberTooltipRef: PropTypes.object,
   tracks: PropTypes.array,
   trackScrubberRef: PropTypes.object,

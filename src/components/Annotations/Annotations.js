@@ -151,11 +151,11 @@ const Annotations = ({
     if (canvasPlaylistsMarkersRef.current.length > 0) {
       return (
         <table className='ramp--markers-display_table' data-testid='markers-display-table'>
-          <thead data-testid='markers-display-table-headings'>
-            <tr data-testid='markers-display-table-headings-row'>
-              <th data-testid='markers-display-table-time-heading'><label htmlFor='marker-edit-time'>Time</label></th>
-              <th data-testid='markers-display-table-name-heading'><label htmlFor='marker-edit-label'>Name</label></th>
-              {hasAnnotationService && <th data-testid='markers-display-table-actions-row'>Actions</th>}
+          <thead>
+            <tr>
+              <th><label htmlFor='marker-edit-time'>Time</label></th>
+              <th><label htmlFor='marker-edit-label'>Name</label></th>
+              {hasAnnotationService && <th>Actions</th>}
             </tr>
           </thead>
           <tbody data-testid='markers-display-table-body'>
