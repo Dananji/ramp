@@ -7,14 +7,16 @@ const languageCache = new Map();
 // Default to English
 languageCache.set('en', en);
 
-/* Detect the environment using Vite's import.meta.env.DEV which is set correctly by both
- the Vite dev server and Storybook's Vite builder, unlike process.env.NODE_ENV */
-const isDevelopment = import.meta.env.DEV;
+/* Statically glob all VideoJS language files so Vite can discover and bundle each one
+ as its own chunk at build time for all deployments.
+ A fully dynamic import() with @vite-ignore is not included in the production build,
+ so that language files would give a 404 once deployed. */
+const langModules = import.meta.glob('../../node_modules/video.js/dist/lang/*.json');
 
 /**
- * Dynamically load a Video.js language file
- * @param {String} languageCode - language code from user props
- * @returns {Object} - language data object
+ * Load a Video.js language file
+ * @param {String} languageCode language code from user props
+ * @returns {Object} language data object
  */
 export async function loadVideoJSLanguage(languageCode) {
   if (!languageCode) {
@@ -44,21 +46,13 @@ export async function loadVideoJSLanguage(languageCode) {
 
     // Try each language variant
     for (const variant of langVariants) {
-      try {
-        if (isDevelopment) {
-          // In development, adjust the import path to point to node_modules
-          const module = await import(/* @vite-ignore */ `../../node_modules/video.js/dist/lang/${variant}.json`);
-          languageData = module.default || module;
-        } else {
-          // Production build can use the standard dynamic import path
-          const module = await import(/* @vite-ignore */ `video.js/dist/lang/${variant}.json`);
-          languageData = module.default || module;
-          break;
-        }
-      } catch (e) {
-        // Ignore and try next variant
+      const importModule = langModules[`../../node_modules/video.js/dist/lang/${variant}.json`];
+      if (!importModule) {
         continue;
       }
+      const module = await importModule();
+      languageData = module.default || module;
+      break;
     }
 
     if (!languageData) {
