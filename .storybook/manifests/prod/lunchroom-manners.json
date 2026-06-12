@@ -1,6 +1,6 @@
 {
   "@context": "http://iiif.io/api/presentation/3/context.json",
-  "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom-manners.json",
+  "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom-manners.json",
   "type": "Manifest",
   "label": {
     "en": [
@@ -298,23 +298,23 @@
   "rights": "http://creativecommons.org/licenses/by-sa/3.0/",
   "items": [
     {
-      "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1",
+      "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1",
       "type": "Canvas",
       "height": 360,
       "width": 480,
       "duration": 572.034,
       "placeholderCanvas": {
-        "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1/placeholder",
+        "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1/placeholder",
         "type": "Canvas",
         "width": 640,
         "height": 360,
         "items": [
           {
-            "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1/placeholder/1",
+            "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1/placeholder/1",
             "type": "AnnotationPage",
             "items": [
               {
-                "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1/placeholder/1-image",
+                "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1/placeholder/1-image",
                 "type": "Annotation",
                 "motivation": "painting",
                 "body": {
@@ -324,7 +324,7 @@
                   "width": 640,
                   "height": 360
                 },
-                "target": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1/placeholder"
+                "target": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1/placeholder"
               }
             ]
           }
@@ -332,11 +332,11 @@
       },
       "items": [
         {
-          "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1/page",
+          "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1/page",
           "type": "AnnotationPage",
           "items": [
             {
-              "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1/page/annotation",
+              "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1/page/annotation",
               "type": "Annotation",
               "motivation": "painting",
               "body": {
@@ -375,18 +375,18 @@
                   }
                 ]
               },
-              "target": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1"
+              "target": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1"
             }
           ]
         }
       ],
       "annotations": [
         {
-          "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1/page/2",
+          "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1/page/2",
           "type": "AnnotationPage",
           "items": [
             {
-              "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1/annotation/webvtt",
+              "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1/annotation/webvtt",
               "type": "Annotation",
               "motivation": "supplementing",
               "body": {
@@ -399,10 +399,10 @@
                   ]
                 }
               },
-              "target": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1"
+              "target": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1"
             },
             {
-              "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1/annotation/srt",
+              "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1/annotation/srt",
               "type": "Annotation",
               "motivation": "supplementing",
               "body": {
@@ -415,7 +415,7 @@
                   ]
                 }
               },
-              "target": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1"
+              "target": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1"
             }
           ]
         }
@@ -424,7 +424,7 @@
   ],
   "structures": [
     {
-      "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/range/0",
+      "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/range/0",
       "type": "Range",
       "label": {
         "en": [
@@ -433,7 +433,7 @@
       },
       "items": [
         {
-          "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/range/1",
+          "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/range/1",
           "type": "Range",
           "label": {
             "en": [
@@ -442,7 +442,7 @@
           },
           "items": [
             {
-              "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/range/1-1",
+              "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/range/1-1",
               "type": "Range",
               "label": {
                 "en": [
@@ -451,7 +451,7 @@
               },
               "items": [
                 {
-                  "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/range/1-1-1",
+                  "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/range/1-1-1",
                   "type": "Range",
                   "label": {
                     "en": [
@@ -460,13 +460,13 @@
                   },
                   "items": [
                     {
-                      "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1#t=157,160",
+                      "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1#t=157,160",
                       "type": "Canvas"
                     }
                   ]
                 },
                 {
-                  "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/range/1-1-3",
+                  "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/range/1-1-3",
                   "type": "Range",
                   "label": {
                     "en": [
@@ -475,13 +475,13 @@
                   },
                   "items": [
                     {
-                      "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1#t=165,170",
+                      "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1#t=165,170",
                       "type": "Canvas"
                     }
                   ]
                 },
                 {
-                  "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/range/1-2",
+                  "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/range/1-2",
                   "type": "Range",
                   "label": {
                     "en": [
@@ -490,7 +490,7 @@
                   },
                   "items": [
                     {
-                      "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/range/1-2-1",
+                      "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/range/1-2-1",
                       "type": "Range",
                       "label": {
                         "en": [
@@ -499,13 +499,13 @@
                       },
                       "items": [
                         {
-                          "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1#t=170,180",
+                          "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1#t=170,180",
                           "type": "Canvas"
                         }
                       ]
                     },
                     {
-                      "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/range/1-2-2",
+                      "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/range/1-2-2",
                       "type": "Range",
                       "label": {
                         "en": [
@@ -514,7 +514,7 @@
                       },
                       "items": [
                         {
-                          "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1#t=180,190",
+                          "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1#t=180,190",
                           "type": "Canvas"
                         }
                       ]
@@ -524,7 +524,7 @@
               ]
             },
             {
-              "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/range/2",
+              "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/range/2",
               "type": "Range",
               "label": {
                 "en": [
@@ -533,7 +533,7 @@
               },
               "items": [
                 {
-                  "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/range/2-1",
+                  "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/range/2-1",
                   "type": "Range",
                   "label": {
                     "en": [
@@ -542,7 +542,7 @@
                   },
                   "items": [
                     {
-                      "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/range/2-1-1",
+                      "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/range/2-1-1",
                       "type": "Range",
                       "label": {
                         "en": [
@@ -551,13 +551,13 @@
                       },
                       "items": [
                         {
-                          "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1#t=227,245",
+                          "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1#t=227,245",
                           "type": "Canvas"
                         }
                       ]
                     },
                     {
-                      "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/range/2-1-2",
+                      "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/range/2-1-2",
                       "type": "Range",
                       "label": {
                         "en": [
@@ -566,13 +566,13 @@
                       },
                       "items": [
                         {
-                          "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1#t=258,288",
+                          "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1#t=258,288",
                           "type": "Canvas"
                         }
                       ]
                     },
                     {
-                      "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/range/2-1-3",
+                      "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/range/2-1-3",
                       "type": "Range",
                       "label": {
                         "en": [
@@ -581,7 +581,7 @@
                       },
                       "items": [
                         {
-                          "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1#t=301,308",
+                          "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1#t=301,308",
                           "type": "Canvas"
                         }
                       ]
@@ -589,7 +589,7 @@
                   ]
                 },
                 {
-                  "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/range/2-2",
+                  "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/range/2-2",
                   "type": "Range",
                   "label": {
                     "en": [
@@ -598,7 +598,7 @@
                   },
                   "items": [
                     {
-                      "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/range/2-2-1",
+                      "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/range/2-2-1",
                       "type": "Range",
                       "label": {
                         "en": [
@@ -607,13 +607,13 @@
                       },
                       "items": [
                         {
-                          "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1#t=323,333",
+                          "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1#t=323,333",
                           "type": "Canvas"
                         }
                       ]
                     },
                     {
-                      "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/range/2-2-2",
+                      "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/range/2-2-2",
                       "type": "Range",
                       "label": {
                         "en": [
@@ -622,7 +622,7 @@
                       },
                       "items": [
                         {
-                          "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1#t=362,378",
+                          "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1#t=362,378",
                           "type": "Canvas"
                         }
                       ]
@@ -630,7 +630,7 @@
                   ]
                 },
                 {
-                  "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/range/2-3",
+                  "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/range/2-3",
                   "type": "Range",
                   "label": {
                     "en": [
@@ -639,7 +639,7 @@
                   },
                   "items": [
                     {
-                      "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/range/2-3-1",
+                      "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/range/2-3-1",
                       "type": "Range",
                       "label": {
                         "en": [
@@ -648,13 +648,13 @@
                       },
                       "items": [
                         {
-                          "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1#t=448,492",
+                          "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1#t=448,492",
                           "type": "Canvas"
                         }
                       ]
                     },
                     {
-                      "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/range/2-3-2",
+                      "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/range/2-3-2",
                       "type": "Range",
                       "label": {
                         "en": [
@@ -663,7 +663,7 @@
                       },
                       "items": [
                         {
-                          "id": "https://dananji.github.io/storybook-manifests/dev/lunchroom_manners/canvas/1#t=573,600",
+                          "id": "https://dananji.github.io/ramp/storybook-manifests/prod/lunchroom_manners/canvas/1#t=573,600",
                           "type": "Canvas"
                         }
                       ]

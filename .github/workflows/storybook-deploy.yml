@@ -21,8 +21,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'yarn'
@@ -30,8 +32,10 @@ jobs:
         run: yarn install --frozen-lockfile
       - name: Build Storybook
         run: yarn storybook:build
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - name: Setup pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: storybook-static
 

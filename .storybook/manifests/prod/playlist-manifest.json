@@ -4,7 +4,7 @@
     "http://iiif.io/api/presentation/3/context.json"
   ],
   "type": "Manifest",
-  "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest.json",
+  "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest.json",
   "label": {
     "none": [
       "Playlist Manifest [Playlist]"
@@ -30,7 +30,7 @@
   "items": [
     {
       "type": "Canvas",
-      "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/1",
+      "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/1",
       "label": {
         "none": [
           "Lunchroom Manners"
@@ -40,17 +40,17 @@
       "height": 360,
       "duration": 572.034,
       "placeholderCanvas": {
-        "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/1/placeholder",
+        "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/1/placeholder",
         "type": "Canvas",
         "width": 640,
         "height": 360,
         "items": [
           {
-            "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/1/placeholder/1",
+            "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/1/placeholder/1",
             "type": "AnnotationPage",
             "items": [
               {
-                "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/1/placeholder/1-image",
+                "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/1/placeholder/1-image",
                 "type": "Annotation",
                 "motivation": "painting",
                 "body": {
@@ -60,7 +60,7 @@
                   "width": 640,
                   "height": 360
                 },
-                "target": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/1/placeholder"
+                "target": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/1/placeholder"
               }
             ]
           }
@@ -69,13 +69,13 @@
       "items": [
         {
           "type": "AnnotationPage",
-          "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/1/page/1",
+          "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/1/page/1",
           "items": [
             {
               "type": "Annotation",
               "motivation": "painting",
-              "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/1/page/1/annotation/1",
-              "target": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/1",
+              "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/1/page/1/annotation/1",
+              "target": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/1",
               "body": {
                 "type": "Choice",
                 "choiceHint": "user",
@@ -128,7 +128,7 @@
       "annotations": [
         {
           "type": "AnnotationPage",
-          "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/1/annotation_page/1",
+          "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/1/annotation_page/1",
           "items": [
             {
               "type": "Annotation",
@@ -138,8 +138,8 @@
                 "format": "text/html",
                 "value": "Marker 1"
               },
-              "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/1/marker/1",
-              "target": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/1#t=2.836"
+              "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/1/marker/1",
+              "target": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/1#t=2.836"
             },
             {
               "type": "Annotation",
@@ -149,8 +149,8 @@
                 "format": "text/html",
                 "value": "Marker 2"
               },
-              "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/1/marker/2",
-              "target": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/1#t=369.811"
+              "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/1/marker/2",
+              "target": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/1#t=369.811"
             }
           ]
         }
@@ -203,7 +203,7 @@
     },
     {
       "type": "Canvas",
-      "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/2",
+      "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/2",
       "label": {
         "none": [
           "Lunchroom Manners - There will be Cake"
@@ -215,13 +215,13 @@
       "items": [
         {
           "type": "AnnotationPage",
-          "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/2/page/1",
+          "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/2/page/1",
           "items": [
             {
               "type": "Annotation",
               "motivation": "painting",
-              "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/2/page/1/annotation/1",
-              "target": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/2",
+              "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/2/page/1/annotation/1",
+              "target": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/2",
               "body": {
                 "id": "https://dananji.github.io/lunchroom_manners/high/lunchroom_manners_1024kb.mp4#t=301,400",
                 "type": "Video",
@@ -236,7 +236,7 @@
       ]
     },
     {
-      "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/3",
+      "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/3",
       "type": "Canvas",
       "label": {
         "none": [
@@ -248,14 +248,14 @@
       "duration": 662.037,
       "items": [
         {
-          "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/3/page/1",
+          "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/3/page/1",
           "type": "AnnotationPage",
           "items": [
             {
-              "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/3/page/1/annotation/1",
+              "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/3/page/1/annotation/1",
               "type": "Annotation",
               "motivation": "painting",
-              "target": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/3",
+              "target": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/3",
               "body": {
                 "id": "https://dananji.github.io/volleyball-for-boys/volleyball-for-boys.mp4#t=400.32,642.45",
                 "type": "Video",
@@ -303,13 +303,13 @@
   "structures": [
     {
       "type": "Range",
-      "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/range/1",
+      "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/range/1",
       "label": null,
       "behavior": "top",
       "items": [
         {
           "type": "Range",
-          "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/range/2",
+          "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/range/2",
           "label": {
             "none": [
               "Lunchroom Manners"
@@ -318,13 +318,13 @@
           "items": [
             {
               "type": "Canvas",
-              "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/1#t=0,"
+              "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/1#t=0,"
             }
           ]
         },
         {
           "type": "Range",
-          "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/range/3",
+          "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/range/3",
           "label": {
             "none": [
               "Lunchroom Manners - There will be Cake"
@@ -333,13 +333,13 @@
           "items": [
             {
               "type": "Canvas",
-              "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/2#t=301,400"
+              "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/2#t=301,400"
             }
           ]
         },
         {
           "type": "Range",
-          "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/range/4",
+          "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/range/4",
           "label": {
             "none": [
               "Volleyball for Boys"
@@ -348,7 +348,7 @@
           "items": [
             {
               "type": "Canvas",
-              "id": "https://dananji.github.io/storybook-manifests/dev/playlist-manifest/canvas/3#t=400.32,642.45"
+              "id": "https://dananji.github.io/ramp/storybook-manifests/prod/playlist-manifest/canvas/3#t=400.32,642.45"
             }
           ]
         }
